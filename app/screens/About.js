@@ -13,6 +13,7 @@ import { Text } from '../components'
 import { MaterialIcons } from '@expo/vector-icons'
 import { ifIphoneX, getStatusBarHeight } from 'react-native-iphone-x-helper'
 import { HeaderBackButton } from '../components'
+import { DeviceInfo } from 'react-native-device-info'
 
 let deviceWidth = Dimensions.get('window').width
 
@@ -24,6 +25,7 @@ class About extends Component {
     }
 
     static navigationOptions = ({ navigation }) => {
+        const hasNotch = DeviceInfo.hasNotch()
         return {
             drawerLabel: 'About',
             drawerIcon: () => <MaterialIcons name='info-outline' style={[s.drawerIcon]} />,
@@ -31,12 +33,7 @@ class About extends Component {
             title: 'About',
             headerStyle: {
                 backgroundColor:'#f5fbff',
-                ...ifIphoneX({
-                    height: getStatusBarHeight() + 30,
-                    paddingTop: getStatusBarHeight()
-                }, {
-                    paddingTop: 0
-                })
+                paddingTop: hasNotch ? 30 : 0
             },
             headerTintColor: '#4b5862'
         }
