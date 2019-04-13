@@ -27,6 +27,7 @@ import {
     getStatusBarHeight,
     ifIphoneX 
 } from 'react-native-iphone-x-helper'
+import DeviceInfo from 'react-native-device-info'
 
 class Map extends Component {
     constructor(props){
@@ -193,6 +194,7 @@ class Map extends Component {
         }
 
         return(
+            console.log(DeviceInfo.getDeviceName()),
             <View style={{flex: 1,backgroundColor:'#f5fbff'}}>
                 <ConfirmationModal 
                     visible={showNoLocationTrackingModal}>

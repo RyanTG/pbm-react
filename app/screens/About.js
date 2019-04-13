@@ -13,7 +13,7 @@ import { Text } from '../components'
 import { MaterialIcons } from '@expo/vector-icons'
 import { ifIphoneX, getStatusBarHeight } from 'react-native-iphone-x-helper'
 import { HeaderBackButton } from '../components'
-import { DeviceInfo } from 'react-native-device-info'
+import DeviceInfo from 'react-native-device-info'
 
 let deviceWidth = Dimensions.get('window').width
 
