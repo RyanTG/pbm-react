@@ -7,12 +7,12 @@ import {
     Image, 
     Linking,
     Modal, 
+    Platform,
     ScrollView, 
     StyleSheet, 
     TouchableOpacity, 
     View, 
 } from 'react-native'
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps'
 import { 
     Button,
     ButtonGroup,
@@ -22,6 +22,8 @@ import {
     FontAwesome, 
     Ionicons 
 } from '@expo/vector-icons'
+import MapView, { UrlTile } from 'react-native-maps'
+import markerDot from '../assets/images/markerdot.png'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { 
     ConfirmationModal, 
@@ -62,15 +64,15 @@ class LocationDetails extends Component {
     static navigationOptions = ({ navigation }) => {
         return {
             headerLeft: <HeaderBackButton navigation={navigation} />,
-            title: <Text>{navigation.getParam('locationName')}</Text>,
-            headerTitleStyle: {width:deviceWidth - 100},
+            title: navigation.getParam('locationName'),
+            headerTitleStyle: Platform.OS === "ios" ? {width:deviceWidth - 90} : {},            
             headerRight: navigation.getParam('loggedIn') && navigation.getParam('buttonIndex') === 1 ?
                 <Button
                     onPress={() => navigation.navigate('EditLocationDetails', {name: navigation.getParam('locationName')})}
                     containerStyle={{width:50}}
                     title="Edit"
                     accessibilityLabel="Edit"
-                    titleStyle={{color: "#F53240", fontSize: 18}}
+                    titleStyle={{color: "#1e9dff", fontSize: 18}}
                     clear={true}
                 /> : null,
             headerStyle: {
@@ -124,7 +126,7 @@ class LocationDetails extends Component {
     render() {
         if (this.props.location.isFetchingLocation || !this.props.location.location.id || this.props.location.addingMachineToLocation) {
             return (
-                <View style={{ flex: 1, padding: 20 }}>
+                <View style={{ flex: 1, padding: 20,backgroundColor:'#f5fbff' }}>
                     <ActivityIndicator />
                 </View>
             )
@@ -201,6 +203,7 @@ class LocationDetails extends Component {
                     {loggedIn && isUserFave && <FontAwesome style={s.saveLocation} name="heart" onPress={() => this.props.removeFavoriteLocation(location.id)}/>}
                     {loggedIn && !isUserFave && <FontAwesome style={s.saveLocation} name="heart-o" onPress={() => this.props.addFavoriteLocation(location.id)}/>}
                     <MapView
+                        mapType={'none'}
                         region={{
                             latitude: Number(location.lat),
                             longitude: Number(location.lon),
@@ -208,8 +211,12 @@ class LocationDetails extends Component {
                             longitudeDelta: 0.03
                         }}
                         style={deviceHeight > 800 ? s.mapTall : s.mapShort}
-                        provider={PROVIDER_GOOGLE}
                     >
+                        <UrlTile
+                            urlTemplate={`http://a.tile.openstreetmap.org/{z}/{x}/{y}.png`}
+                            //urlTemplate={`https://mapserver.pinballmap.com/styles/osm-bright/{z}/{x}/{y}.png`}
+                            maximumZ={20}
+                        />
                         <MapView.Marker
                             coordinate={{
                                 latitude: Number(location.lat),
@@ -217,6 +224,7 @@ class LocationDetails extends Component {
                                 latitudeDelta: 0.03,
                                 longitudeDelta: 0.03,
                             }}
+                            image={markerDot}
                         />
                     </MapView>
                     <View style={{ flex: 3,backgroundColor: "#f5fbff" }}>
@@ -224,7 +232,7 @@ class LocationDetails extends Component {
                             onPress={this.updateIndex}
                             selectedIndex={this.state.buttonIndex}
                             buttons={['Machines', 'Info']}
-                            containerStyle={{ height: 35, borderWidth: 2 }}
+                            containerStyle={{ height: 35, borderWidth: 2, borderColor: '#e0ebf2' }}
                             selectedButtonStyle={s.buttonStyle}
                             selectedTextStyle={s.textStyle}
                         />
@@ -237,6 +245,7 @@ class LocationDetails extends Component {
                                         icon={<MaterialCommunityIcons name='plus' style={s.plusButton} />}
                                         title={loggedIn ? 'Add Machine' : 'Login to add machine'}
                                         accessibilityLabel="Add Machine"
+                                        buttonStyle={s.addMachinesButton}
                                     />
                                     <Button
                                         onPress={() => loggedIn ? this.handleConfirmPress(location.id) : this.props.navigation.navigate('Login') }
@@ -249,7 +258,7 @@ class LocationDetails extends Component {
                                             fontSize:16
                                         }}
                                         style={{borderRadius: 50}}
-                                        containerStyle={[{borderRadius:50},deviceWidth > 400 ? s.margin25 : s.margin15]}
+                                        containerStyle={[{borderRadius:50},s.margin15]}
                                     />
                                 </View>
                                 {sortedMachines.map(machine => (
@@ -269,7 +278,7 @@ class LocationDetails extends Component {
                                             title={this.getTitle(machine)}
                                             subtitle={
                                                 <View style={s.condition}>
-                                                    {machine.condition ? <Text style={s.conditionText}>{`"${machine.condition.length < 100 ? machine.condition : `${machine.condition.substr(0, 100)}...`}"`}</Text> : null}
+                                                    {machine.condition ? <Text style={s.conditionText}>{`${machine.condition.length < 100 ? machine.condition : `${machine.condition.substr(0, 100)}...`}`}</Text> : null}
                                                     {machine.condition_date ? <Text>{`Last Updated: ${moment(machine.condition_date, 'YYYY-MM-DD').format('MMM-DD-YYYY')} ${machine.last_updated_by_username && `by ${machine.last_updated_by_username}`}`}</Text> : null}
                                                 </View>
                                             }
@@ -446,7 +455,7 @@ const s = StyleSheet.create({
         backgroundColor:'#f5fbff',
         borderWidth: 1,
         borderColor: '#4b5862',
-        borderRadius: 5,
+        borderRadius: 50,
         elevation: 0
     },
     margin15: {
@@ -455,11 +464,11 @@ const s = StyleSheet.create({
         marginTop:0,
         marginBottom:10
     },
-    margin25: {
-        marginLeft:25,
-        marginRight:25,
-        marginTop:0,
-        marginBottom:10
+    addMachinesButton: {
+        backgroundColor: '#e0ebf2',
+        borderRadius: 50,
+        width: '100%',
+        elevation: 0
     },
 })
 

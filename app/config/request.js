@@ -9,13 +9,30 @@ export const postData = (uri, body) => {
         },
         body: JSON.stringify(body)
     })
-        .then(response => {
-            if (response.ok) 
-                return response.json()
-      
-            throw new Error('API response was not ok.')
+        .then(async response => {
+            try {
+                const data = await response.json()
+          
+                if (data.errors) {
+                    throw data.errors
+                }
+
+                if (data.error) {
+                    throw data.error
+                }
+
+                if (response.ok)
+                    return data
+
+            } 
+            catch (e) {
+                throw e
+            }
         })
-        .catch(err => Promise.reject(err))
+        .catch(err => {
+            const errorText = typeof err === 'object' ? err.toString() : err
+            return Promise.reject(errorText)
+        })
 }
 
 export const putData = (uri, body) => {
@@ -27,13 +44,30 @@ export const putData = (uri, body) => {
         },
         body: JSON.stringify(body)
     })
-        .then(response => {
-            if (response.ok) 
-                return response.json()
-    
-            throw new Error('API response was not ok.')
+        .then(async response => {
+            try {
+                const data = await response.json()
+          
+                if (data.errors) {
+                    throw data.errors
+                }
+
+                if (data.error) {
+                    throw data.error
+                }
+
+                if (response.ok)
+                    return data
+
+            } 
+            catch (e) {
+                throw e
+            }
         })
-        .catch(err => Promise.reject(err))
+        .catch(err => {
+            const errorText = typeof err === 'object' ? err.toString() : err
+            return Promise.reject(errorText)
+        })
 }
 
 export const getData = uri => {
@@ -47,6 +81,17 @@ export const getData = uri => {
         .catch(err => err)
 }
 
+export const getIfpaData = address => {
+    return fetch(`https://api.ifpapinball.com/v1/calendar/search?api_key=a3be4f0cde21806308b466b7a6babdf5&address=${address}&m=50`)
+        .then(response => {
+            if(response.status === 200)
+                return response.json()
+
+            throw new Error('IFPA API response was not ok')
+        })
+        .catch(err => err)
+}
+
 export const deleteData = (uri, body)  => {
     return fetch(global.api_url + uri, {
         method: 'delete', 
@@ -56,13 +101,17 @@ export const deleteData = (uri, body)  => {
         },
         body: JSON.stringify(body)
     })
-        .then(response => {
-            if(response.status === 200)
-                return response.json()
-    
-            throw new Error('API response was not ok')
+        .then(async response => {
+            try {
+                const data = await response.json()
+                if (response.ok)
+                    return data
+            } 
+            catch (e) {
+                throw 'Something went wrong.'
+            }
         })
-        .catch(err => err)
+        .catch(err => Promise.reject(err))
 }
 
 export const getCurrentLocation = () => {

@@ -7,9 +7,9 @@ import {
     FETCHING_LOCATIONS_FAILURE,
     FETCHING_LOCATIONS_BY_CITY, 
     FETCHING_LOCATIONS_BY_CITY_SUCCESS,
-    FETCHING_LOCATIONS_BY_CITY_FAILURE,
     REFETCHING_LOCATIONS,
     SELECT_LOCATION_LIST_FILTER_BY,
+    DISPLAY_ERROR
 } from './types'
 
 import { getData, putData } from '../config/request'
@@ -54,7 +54,7 @@ export const getLocationsByCity = (city) => dispatch => {
 export const getLocationsSuccess = (data) => {
     return {
         type: FETCHING_LOCATIONS_SUCCESS,
-        locations: data.locations,
+        locations: data.locations ? data.locations : [],
     }
 }
 
@@ -65,7 +65,10 @@ export const getLocationsByCitySuccess = data => {
     }
 }
   
-export const getLocationsFailure = () => ({ type: FETCHING_LOCATIONS_FAILURE })
+export const getLocationsFailure = () => dispatch => {
+    dispatch({ type: FETCHING_LOCATIONS_FAILURE })
+    dispatch({ type: DISPLAY_ERROR, err: 'Unable to get locations. Please try again later.'})
+}
 
 export const selectLocationListFilterBy = idx => {
     return {

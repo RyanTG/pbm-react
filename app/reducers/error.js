@@ -1,23 +1,23 @@
 import {
-    DISPLAY_API_ERROR,
-    CLEAR_API_ERROR,
+    DISPLAY_ERROR,
+    CLEAR_ERROR,
 } from '../actions/types'
 
 export const initialState = {
-    errorText: null,
+    errorText: undefined,
 }
 
 export default (state = initialState, action) => {
     switch (action.type) {
-    case DISPLAY_API_ERROR: 
+    case DISPLAY_ERROR: 
         return {
             ...state,
             errorText: action.err,
         }
-    case CLEAR_API_ERROR: 
+    case CLEAR_ERROR: 
         return {
             ...state,
-            errorText: null
+            errorText: undefined
         }
     default: 
         return state

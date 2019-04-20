@@ -17,6 +17,7 @@ import {
     getStatusBarHeight,
     ifIphoneX,
 } from 'react-native-iphone-x-helper'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { FlatList } from 'react-native-gesture-handler'
 import { 
     addMachineToLocation,
@@ -210,23 +211,22 @@ class FindMachine extends React.PureComponent {
                     </TouchableWithoutFeedback>
                 </Modal> 
                 <SearchBar
-                    round
                     lightTheme
                     placeholder='Filter machines...'
                     platform='default'
-                    searchIcon={<MaterialIcons name='search' size={25} color="#4b5862" />}
-                    clearIcon={<MaterialIcons name='clear' size={20} color="#F53240" onPress={() => this.handleSearch('')} />}
+                    searchIcon={<MaterialIcons name='search' size={25} color="#97a5af" />}
+                    clearIcon={<MaterialCommunityIcons name='close-circle' size={20} color="#97a5af" onPress={() => this.handleSearch('')} />}
                     onChangeText={this.handleSearch}
                     inputStyle={{color:'#000e18'}}
                     value={this.state.query}
-                    inputContainerStyle={{height:35,backgroundColor:'#ffffff'}}
-                    containerStyle={{backgroundColor:'#97a5af'}}
+                    inputContainerStyle={s.filterInput}
+                    containerStyle={{backgroundColor:'#f5fbff'}}
                 />
                 {multiSelect ? 
-                    <View style={{alignItems:'center',marginTop:5}}>
-                        {machineList.length === 0 ? <Text>Select Machines to Add</Text> :
+                    <View style={{alignItems:'center',padding:5,backgroundColor: "#6a7d8a"}}>
+                        {machineList.length === 0 ? <Text style={{color: "#f5fbff"}}>0 machines selected</Text> :
                             <View style={{display: 'flex', flexDirection: 'row'}}>
-                                <Text>{`${machineList.length} machine${machineList.length > 1 ? 's' : ''} selected`}</Text>
+                                <Text style={{color: "#f5fbff"}}>{`${machineList.length} machine${machineList.length > 1 ? 's' : ''} selected`}</Text>
                             </View>
                         }
                     </View> : null
@@ -243,15 +243,22 @@ class FindMachine extends React.PureComponent {
 }
 
 const s = StyleSheet.create({
+    filterInput: {
+        height:35,
+        backgroundColor:'#e0ebf2',
+        borderRadius:10,
+        borderColor: '#d1dfe8',
+        borderWidth:1
+    },
     textInput: {
-        backgroundColor: '#ffffff', 
-        borderColor: '#97a5af', 
-        borderWidth: 2,
+        backgroundColor: '#e0ebf2', 
+        borderColor: '#d1dfe8',
+        borderWidth: 1,
         height: 80,
         marginLeft:20,
         marginRight:20, 
         marginTop: 20,
-        borderRadius: 5
+        borderRadius: 10,
     },
     titleStyle: {
         color: "#6a7d8a",

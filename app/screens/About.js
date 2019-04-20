@@ -3,7 +3,8 @@ import PropTypes from 'prop-types'
 import { 
     Dimensions,
     Image, 
-    Linking, 
+    Linking,
+    Platform,
     StyleSheet, 
     ScrollView, 
     View, 
@@ -11,11 +12,11 @@ import {
 import { getData } from '../config/request'
 import { Text } from '../components'
 import { MaterialIcons } from '@expo/vector-icons'
-import { ifIphoneX, getStatusBarHeight } from 'react-native-iphone-x-helper'
 import { HeaderBackButton } from '../components'
-import DeviceInfo from 'react-native-device-info'
+import { Constants } from 'expo'
 
 let deviceWidth = Dimensions.get('window').width
+console.log('statusbarheight ' + Expo.Constants.statusBarHeight)
 
 class About extends Component {
     state ={ 
@@ -25,7 +26,6 @@ class About extends Component {
     }
 
     static navigationOptions = ({ navigation }) => {
-        const hasNotch = DeviceInfo.hasNotch()
         return {
             drawerLabel: 'About',
             drawerIcon: () => <MaterialIcons name='info-outline' style={[s.drawerIcon]} />,
@@ -33,7 +33,8 @@ class About extends Component {
             title: 'About',
             headerStyle: {
                 backgroundColor:'#f5fbff',
-                paddingTop: hasNotch ? 30 : 0
+                height: Expo.Constants.statusBarHeight > 40 ? 60 : Platform.OS === 'android' ? 56 : Platform.OS === 'ios' ? 44 : null, 
+                paddingTop: Expo.Constants.statusBarHeight > 40 ? 30 : '',                
             },
             headerTintColor: '#4b5862'
         }
@@ -55,7 +56,6 @@ class About extends Component {
             })
             .catch(apiError => this.setState({ apiError }))
     }
-     
     render(){
         return(
             <ScrollView style={{flex:1,backgroundColor:'#f5fbff'}}>
@@ -63,11 +63,11 @@ class About extends Component {
                     <View style={[s.logoWrapper,s.child]}>
                         <Image source={require('../assets/images/pinballmapcom_nocom.png')} resizeMode="contain" style={s.logo}/>
                     </View>
-                    <View style={s.child}>
+                    <View style={s.child}>                   
                         <Text style={s.text}>Pinball Map was founded in 2008. It is a crowdsourced map listing all the public pinball machines in North America and beyond.</Text>
                         <Text style={s.text}>We are currently listing {this.state.num_locations} locations and {this.state.num_lmxes} machines. You can update the map using this app or the website: <Text style={s.textLink} onPress={() => Linking.openURL('https://pinballmap.com')}>pinballmap.com</Text>.</Text>
-                        <Text style={s.text}>We are currently supplying the mapping data for the <Text style={s.textLink} onPress={() => Linking.openURL('https://sternpinball.com/pinball-locator/')}>{'Stern Pinball website'}</Text>, as well as the <Text style={s.textLink} onPress={() => Linking.openURL('https://pindigo.app/')}>{'Pindigo app'}</Text>. We also collaborate with <Text style={s.textLink} onPress={() => Linking.openURL('http://pintips.net')}>{'PinTips'}</Text> and <Text style={s.textLink} onPress={() => Linking.openURL('http://matchplay.events')}>{'MatchPlay Events'}</Text>.</Text>
-                        <Text style={s.text}><Text onPress={ () => this.props.navigation.navigate('Contact') } style={s.textLink}>{"Contact Us"}</Text>. <Text onPress={ () => this.props.navigation.navigate('Blog') } style={s.textLink}>{"Read the blog"}</Text>, or <Text onPress={ () => this.props.navigation.navigate('FAQ') } style={s.textLink}>{"read the FAQ"}</Text>.</Text>
+                        <Text style={s.text}>We are currently supplying the mapping data for the <Text style={s.textLink} onPress={() => Linking.openURL('https://sternpinball.com/pinball-locator/')}>{`Stern Pinball website`}</Text>, as well as the <Text style={s.textLink} onPress={() => Linking.openURL('https://pindigo.app/')}>{`Pindigo app`}</Text>. We also collaborate with <Text style={s.textLink} onPress={() => Linking.openURL('http://pintips.net')}>{`PinTips`}</Text> and <Text style={s.textLink} onPress={() => Linking.openURL('http://matchplay.events')}>{`MatchPlay Events`}</Text>.</Text>
+                        <Text style={s.text}><Text onPress={ () => this.props.navigation.navigate('Contact') } style={s.textLink}>{`Contact Us`}</Text>. <Text onPress={ () => this.props.navigation.navigate('Blog') } style={s.textLink}>{`Read the blog`}</Text>, or <Text onPress={ () => this.props.navigation.navigate('FAQ') } style={s.textLink}>{`read the FAQ`}</Text>.</Text>
                         <Text style={s.text}>Listen to our podcast, <Text style={s.textLink} onPress={() => Linking.openURL('http://pod.pinballmap.com')}>{`Mappin' Around with Scott & Ryan!`}</Text></Text>
                         <Text style={s.text}>Follow <Text style={s.textLink} onPress={() => Linking.openURL('https://twitter.com/pinballmapcom')}>@pinballmapcom</Text> on Twitter for updates and news!</Text>
                         <Text style={s.text}>Support us via the <Text style={s.textLink} onPress={() => Linking.openURL('https://patreon.com/pinballmap')}>Pinball Map Patreon</Text>.</Text>

@@ -12,7 +12,13 @@ import {
     FAVORITE_LOCATION_ADDED,
     FAVORITE_LOCATION_REMOVED,
     ACKNOWLEDGE_FAVORITE_UPDATE,
-    SELECT_FAVORITE_LOCATION_FILTER_BY
+    SELECT_FAVORITE_LOCATION_FILTER_BY, 
+    SUBMITTING_MESSAGE,
+    MESSAGE_SUBMITTED,
+    MESSAGE_SUBMISSION_FAILED,
+    CLEAR_MESSAGE,
+    ERROR_ADDING_FAVORITE_LOCATION,
+    ERROR_REMOVING_FAVORITE_LOCATION,
 } from '../actions/types'
 
 export const initialState = {
@@ -22,16 +28,18 @@ export const initialState = {
     locationTrackingServicesEnabled: false, 
     loggedIn: false,
     loginLater: false,
-    authentication_token: null,
-    email: null,
+    authentication_token: '',
+    email: '',
     id: null,
-    username: null,
+    username: '',
     faveLocations: [],
     addingFavoriteLocation: false,
     removingFavoriteLocation: false,
     favoriteModalVisible: false,
     favoriteModalText: '',
     selectedFavoriteLocationFilter: 0,
+    submittingMessage: false, 
+    confirmationMessage: '',
 }
 
 export default (state = initialState, action) => {
@@ -41,7 +49,7 @@ export default (state = initialState, action) => {
             ...state,
             isFetchingLocationTrackingEnabled: true,
         }
-    case FETCHING_LOCATION_TRACKING_SUCCESS:
+    case FETCHING_LOCATION_TRACKING_SUCCESS: 
         return {
             ...state,
             isFetchingLocationTrackingEnabled: false,
@@ -49,7 +57,7 @@ export default (state = initialState, action) => {
             lon: action.lon,
             locationTrackingServicesEnabled: true,
         }
-    case FETCHING_LOCATION_TRACKING_FAILURE:
+    case FETCHING_LOCATION_TRACKING_FAILURE: 
         return {
             ...state,
             isFetchingLocationTrackingEnabled: false,
@@ -73,23 +81,26 @@ export default (state = initialState, action) => {
         }
     }
     case LOG_OUT: {
-        AsyncStorage.removeItem('auth')
+        AsyncStorage.setItem('auth', JSON.stringify({loggedIn: false}))
             
         return {
             ...state,
             loggedIn: false,
             loginLater: false,
-            authentication_token: null,
-            email: null,
+            authentication_token: '',
+            email: '',
             id: null,
-            username: null,
+            username: '',
         }
     }
-    case LOGIN_LATER:
+    case LOGIN_LATER: {
+        AsyncStorage.setItem('auth', JSON.stringify({loggedIn: false}))
+
         return {
             ...state,
             loginLater: true,
         }
+    }
     case FETCHING_FAVORITE_LOCATIONS_SUCCESS:
         return {
             ...state,
@@ -113,12 +124,24 @@ export default (state = initialState, action) => {
             addingFavoriteLocation: false,
             favoriteModalText: 'Successfully added location to your saved list',
         }
+    case ERROR_ADDING_FAVORITE_LOCATION: 
+        return {
+            ...state, 
+            addingFavoriteLocation: false,
+            favoriteModalText: action.err
+        }
     case FAVORITE_LOCATION_REMOVED: 
         return {
             ...state,
             removingFavoriteLocation: false,
             favoriteModalText: 'Successfully removed location from your saved list',
             faveLocations: state.faveLocations.filter(location => location.location_id !== action.id)
+        }
+    case ERROR_REMOVING_FAVORITE_LOCATION: 
+        return {
+            ...state, 
+            removingFavoriteLocation: false,
+            favoriteModalText: action.err
         }
     case ACKNOWLEDGE_FAVORITE_UPDATE: 
         return {
@@ -130,6 +153,28 @@ export default (state = initialState, action) => {
         return {
             ...state,
             selectedFavoriteLocationFilter: action.idx,
+        }
+    case SUBMITTING_MESSAGE: 
+        return {
+            ...state,
+            submittingMessage: true
+        }
+    case MESSAGE_SUBMITTED: 
+        return {
+            ...state,
+            submittingMessage: false,
+            confirmationMessage: "Thanks for the message! We'll try to respond soon."
+        }
+    case MESSAGE_SUBMISSION_FAILED: 
+        return {
+            ...state,
+            submittingMessage: false,
+            confirmationMessage: 'Oops something went wrong'
+        }
+    case CLEAR_MESSAGE: 
+        return {
+            ...state,
+            confirmationMessage: '',
         }
     default:
         return state

@@ -34,7 +34,6 @@ export class SignupLogin extends Component {
             num_locations: 0, 
             num_lmxes: 0, 
             apiError: '',
-            showTurnOnLocationServices: true,
         }
     }
 
@@ -66,48 +65,21 @@ export class SignupLogin extends Component {
 
         retrieveItem('auth').then((auth) => {
             if (auth) {
+                if (auth.id) {
+                    this.props.login(auth)
+                }
                 this.props.navigation.navigate('Map')
-                this.props.login(auth)
             }
         }).catch((error) => console.log('Promise is rejected with error: ' + error)) 
+
     }
 
     render(){
-        if (this.props.user.isFetchingLocationTrackingEnabled || (this.state.num_lmxes === 0 && !this.state.apiError)) {
-            return <ActivityIndicator />
-        }
-        
-        if (!this.props.user.locationTrackingServicesEnabled && this.state.showTurnOnLocationServices) {
+        if (this.state.fetchingShowTurnOnLocationServices || (this.state.num_lmxes === 0 && !this.state.apiError)) {
             return (
-                <ScrollView>
-                    <ImageBackground source={require('../assets/images/app_logo.jpg')} style={s.backgroundImage}>
-                        <View style={[s.mask,,s.justify]}>
-                            <View style={s.logoWrapper}>
-                                <Image source={require('../assets/images/pinballmapcom_nocom.png')} style={s.logo}/>
-                            </View>
-                            <View style={s.outerBorder}>
-                                <View style={s.textBg}>
-                                    <Text style={{fontSize:18,textAlign:"center"}}>
-                                    To show you pinball machines near you, you’ll need to enable location services for this app.
-                                    </Text>
-                                </View>               
-                            </View>
-                            <View style={{padding:15}}>
-                                <Button
-                                //Clear error state to allow user to proceed either way
-                                    onPress={ () => this.setState({ showTurnOnLocationServices: false}) }
-                                    raised
-                                    buttonStyle={s.buttonBlue}
-                                    titleStyle={s.titleStyle}
-                                    title="Enable Location Services"
-                                    accessibilityLabel="Enable Location Services"
-                                    containerStyle={{borderRadius:50}}
-                                    style={{borderRadius: 50}}
-                                />                    
-                            </View>
-                        </View>
-                    </ImageBackground>
-                </ScrollView>
+                <View style={{ flex: 1, padding: 20,backgroundColor:'#f5fbff' }}>
+                    <ActivityIndicator />
+                </View>
             )
         }
         
@@ -129,6 +101,10 @@ export class SignupLogin extends Component {
                                     <Text>machines.</Text>
                                     {"\n"}{"\n"}
                                     <Text>You can use it without being logged in. But to help keep it up to date you gotta log in!</Text>
+                                    {"\n"}{"\n"}
+                                    <Text style={{marginTop:15,fontSize:18,textAlign:"center"}}>
+                                        You’ll be prompted to enable location services, so that we can display pinball machines near you!
+                                    </Text>
                                 </Text>
                             }
                         </View>
@@ -236,9 +212,9 @@ SignupLogin.propTypes = {
     loginLater: PropTypes.func,
     navigation: PropTypes.object,
     login: PropTypes.func, 
-    fetchLocationTypes: PropTypes.func,
-    fetchMachines: PropTypes.func,
-    fetchOperators: PropTypes.func,
+    getLocationTypes: PropTypes.func,
+    getMachines: PropTypes.func,
+    getOperators: PropTypes.func,
 }
 
 const mapStateToProps = ({ user }) => ({ user })

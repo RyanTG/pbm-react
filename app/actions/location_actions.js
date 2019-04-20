@@ -9,10 +9,9 @@ import {
     MACHINE_SCORE_ADDED,
     LOCATION_MACHINE_REMOVED,
     ADDING_MACHINE_TO_LOCATION,
-    ADD_MACHINES_TO_LIST,
     MACHINE_ADDED_TO_LOCATION,
     MACHINE_ADDED_TO_LOCATION_FAILURE,
-    DISPLAY_API_ERROR,
+    DISPLAY_ERROR,
     UPDATING_LOCATION_DETAILS,
     LOCATION_DETAILS_UPDATED,
     FAILED_LOCATION_DETAILS_UPDATE,
@@ -50,8 +49,10 @@ export const getLocationFailure = () => {
 
 export const confirmLocationIsUpToDate = (body, id, username) => dispatch => {
     return putData(`/locations/${id}/confirm.json`, body)
-        .then(data => dispatch(locationDetailsConfirmed(data.msg, username, id)))
-        .catch(err => console.log(err))
+        .then(data => dispatch(locationDetailsConfirmed(data.msg, username, id)), 
+            err => {throw err }
+        )
+        .catch(err => dispatch({type: DISPLAY_ERROR, err}))
 }
 
 const locationDetailsConfirmed = (msg, username, id) => {
@@ -130,8 +131,9 @@ export const removeMachineFromLocation = (curLmx, location_id) => (dispatch, get
     const nameManYear = machines.find(machine => machine.id === machine_id).nameManYear
 
     return deleteData(`/location_machine_xrefs/${lmx}.json `, body)
-        .then(() => dispatch(locationMachineRemoved(lmx, nameManYear, location_id)))
-        .catch(err => console.log(err))
+        .then(() => dispatch(locationMachineRemoved(lmx, nameManYear, location_id)), 
+            err => { throw err })
+        .catch(err => dispatch({type: DISPLAY_ERROR, err}))
 }
 
 export const locationMachineRemoved = (lmx, nameManYear, location_id) => {
@@ -162,7 +164,8 @@ export const addMachineToLocation = (machine, condition) => (dispatch, getState)
     return postData(`/location_machine_xrefs.json`, body)
         .then(() => 
             dispatch(machineAddedToLocation(location_id, machine)),
-        err => dispatch(addMachineToLocationFailure(err)))
+        err => { throw err })
+        .catch(err => dispatch(addMachineToLocationFailure(err)))
 }
 
 const machineAddedToLocation = (location_id, machine) => dispatch => 
@@ -173,7 +176,7 @@ const machineAddedToLocation = (location_id, machine) => dispatch =>
     })
 
 export const addMachineToLocationFailure = (err) => dispatch => {
-    dispatch({type: DISPLAY_API_ERROR, err: err.message})
+    dispatch({type: DISPLAY_ERROR, err})
     dispatch({type: MACHINE_ADDED_TO_LOCATION_FAILURE})
 } 
 
@@ -203,7 +206,7 @@ export const locationDetailsUpdated = (goBack, data, username) => dispatch => {
 }
 
 export const updateLocationDetailsFailure = (err) => dispatch => {
-    dispatch({type: DISPLAY_API_ERROR, err: err.message})
+    dispatch({type: DISPLAY_ERROR, err})
     dispatch({type: FAILED_LOCATION_DETAILS_UPDATE})
 }
 
@@ -214,8 +217,7 @@ export const clearMachineList = () => ({ type: CLEAR_MACHINE_LIST })
 export const suggestLocation = (locationDetails) => (dispatch, getState) => {
     dispatch({ type: SUGGESTING_LOCATION }) 
 
-    // NOTE: using lat/lon from user will default to PDX if the location services are not enabled
-    const { email, authentication_token, lat, lon } = getState().user
+    const { email, authentication_token, lat, lon, locationTrackingServicesEnabled  } = getState().user
     const {
         locationName: location_name,
         street: location_street, 
@@ -236,8 +238,6 @@ export const suggestLocation = (locationDetails) => (dispatch, getState) => {
     const body = {
         user_email: email,
         user_token: authentication_token,
-        lat,
-        lon,
         location_name,
         location_street,
         location_city,
@@ -252,13 +252,18 @@ export const suggestLocation = (locationDetails) => (dispatch, getState) => {
         location_machines,
     }
 
+    if (locationTrackingServicesEnabled) {
+        body.lat = lat
+        body.lon = lon
+    }
+
     return postData(`/locations/suggest.json`, body)
         .then(response => {
             if (response.errors) {
                 throw new Error(response.errors)
             }
             dispatch(locationSuggested())
-        })
+        }, err => { throw err })
         .catch(err => dispatch(suggestLocationFailure(err)))
 }
 
@@ -267,6 +272,6 @@ export const locationSuggested = () => dispatch => {
 }
 
 export const suggestLocationFailure = (err) => dispatch => {
-    dispatch({type: DISPLAY_API_ERROR, err: err.message})
+    dispatch({type: DISPLAY_ERROR, err})
     dispatch({type: FAILED_SUGGEST_LOCATION})
 }

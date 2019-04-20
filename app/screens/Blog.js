@@ -1,15 +1,16 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { 
-    Button,
-    StyleSheet, 
-    Text, 
+    ActivityIndicator,
+    StyleSheet,  
     View, 
+    WebView,
 } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { HeaderBackButton } from '../components'
 
 class Blog extends Component {
+    state = { loading: true }
   
     static navigationOptions = ({ navigation }) => {
         return {
@@ -23,18 +24,24 @@ class Blog extends Component {
             headerTintColor: '#4b5862'
         }
     }
-     
-    render(){
-        return(
-            <View style={{marginTop: 300, flex: 1,backgroundColor:'#f5fbff'}}>
-                <Button
-                    onPress={ () => this.props.navigation.navigate('Map') }
-                    style={{width:30, paddingTop: 15}}
-                    title="Back to Map"
+    
+    render() {
+        return (
+            <View style={{ flex: 1,backgroundColor:'#f5fbff' }}>
+                {this.state.loading && (
+                    <View style={{flex: 1, padding: 20,backgroundColor:'#f5fbff'}}>
+                        <ActivityIndicator/>
+                    </View>
+                )}
+                <WebView
+                    onLoad={() => this.setState({loading: false})}
+                    style={{ flex: 1 }}
+                    source={{uri: 'http://blog.pinballmap.com/'}}
                 />
-                <Text>Blog</Text>
-            </View>)
+            </View>
+        )
     }
+     
 }
 
 const s = StyleSheet.create({ 

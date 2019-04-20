@@ -3,9 +3,11 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 //https://www.peterbe.com/plog/how-to-throttle-and-debounce-an-autocomplete-input-in-react
 import { debounce } from 'throttle-debounce'
+import Geocode from 'react-geocode'
 import { 
     Dimensions, 
     Modal,
+    Platform,
     ScrollView,
     StyleSheet, 
     Text, 
@@ -15,11 +17,19 @@ import {
 import { Input, ListItem } from 'react-native-elements'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { getData } from '../config/request'
-import { getLocationsByCity } from '../actions'
 import { ifIphoneX } from 'react-native-iphone-x-helper'
+import { getData } from '../config/request'
+import { 
+    displayError,
+    fetchLocations,
+    getLocationsByCity,
+    updateCurrCoordinates,
+} from '../actions'
+import { GOOGLE_MAPS_KEY } from '../config/keys'
 
 let deviceWidth = Dimensions.get('window').width
+
+Geocode.setApiKey(GOOGLE_MAPS_KEY)
 
 class Search extends Component {
     constructor(props) {
@@ -29,7 +39,7 @@ class Search extends Component {
             foundLocations: [],
             foundCities: [],
             searchModalVisible: false,
-            showNoResults: false,
+            showSubmitButton: false,
         }
 
         this.autocompleteSearchDebounced = debounce(500, this.autocompleteSearch)
@@ -37,7 +47,7 @@ class Search extends Component {
     }
 
     changeQuery = q => {
-        this.setState({ q, showNoResults: false }, () => {
+        this.setState({ q, showSubmitButton: false }, () => {
             this.autocompleteSearchDebounced(this.state.q)
         })
     }
@@ -54,13 +64,31 @@ class Search extends Component {
             const foundLocations = await getData(`/locations/autocomplete?name=${query}`)
             let foundCities = await getData(`/locations/autocomplete_city.json?name=${query}`)
             if (query === this.waitingFor) {
-                this.setState({ foundLocations, foundCities, showNoResults: true })
+                this.setState({ foundLocations, foundCities, showSubmitButton: true })
             }
         }
     }
 
+    geocodeSearch = (query) => {
+        Geocode.fromAddress(query)
+            .then(response => {
+                const { lat, lng } = response.results[0].geometry.location
+                this.props.getLocations('/locations/closest_by_lat_lon.json?lat=' + lat + ';lon=' + lng + ';send_all_within_distance=1;max_distance=5', true)
+                this.props.updateCoordinates(lat, lng)
+            },
+            error => {
+                console.log(error)
+                this.props.displayError('An error occurred geocoding.')
+            })
+            .then(() => {
+                this.changeQuery('')
+                this.setState({searchModalVisible: false})
+            })
+    }
+
     render(){
-        const { q, foundLocations = [], foundCities = [], searchModalVisible, showNoResults } = this.state
+        const { q, foundLocations = [], foundCities = [], searchModalVisible, showSubmitButton } = this.state
+        const submitButton = foundLocations.length === 0 && foundCities.length === 0 && q !== '' && showSubmitButton
 
         return(
             <View>
@@ -78,7 +106,7 @@ class Search extends Component {
                                 }}
                                 name='clear' 
                                 size={30} 
-                                style={{color:'#6a7d8a',marginLeft:5,marginRight:10,marginTop:6}}
+                                style={s.clear}
                             />
                             <Input
                                 placeholder='City, Address, Location'
@@ -87,11 +115,14 @@ class Search extends Component {
                                 onChangeText={query => this.changeQuery(query)}
                                 value={q}
                                 containerStyle={{paddingTop:4}}
+                                key={submitButton ? 'search' : 'none'}
+                                returnKeyType={submitButton ? 'search' : 'none'}
+                                onSubmitEditing={submitButton ? ({nativeEvent}) => this.geocodeSearch(nativeEvent.text) : () => {}}
                                 inputContainerStyle={s.input}
                                 autoFocus
                             />
                         </View>
-                        <ScrollView style={{paddingTop: 3}} keyboardShouldPersistTaps="handled">
+                        <ScrollView style={{paddingTop: 3}} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
                             {foundCities ? 
                                 foundCities.map(location => 
                                     (<TouchableOpacity 
@@ -128,16 +159,13 @@ class Search extends Component {
                                     </TouchableOpacity>)
                                 ) : null
                             }                        
-                            {foundLocations.length === 0 && foundCities.length === 0 && q !== '' && showNoResults ? 
-                                <Text style={s.noResults}>No search results...</Text> : null 
-                            }
                         </ScrollView>
                     </View>
                 </Modal>
                 <TouchableOpacity onPress={() => this.setState({searchModalVisible: true})}>
                     <View style={s.searchMap}>
                         <MaterialIcons name='search' size={25} color="#97a5af" style={s.searchIcon} />
-                        <Text></Text>
+                        <Text style={{fontSize:16,color:'#c1c9cf',marginTop:6}}>City, Address, Location</Text>
                     </View>
                 </TouchableOpacity>
             </View>
@@ -158,40 +186,53 @@ const s = StyleSheet.create({
         })
     },
     searchMap: {
-        width: deviceWidth - 115,
-        backgroundColor: '#e3e5e8',
-        height: 36,
-        borderRadius: 5,
+        width: Platform.OS === 'ios' ? deviceWidth - 100 : deviceWidth - 115,             
+        backgroundColor: '#e0ebf2',
+        height: 35,
+        borderRadius: 10,
+        borderColor: '#d1dfe8',
+        borderWidth: 1,
         display: 'flex',
-        flexDirection: 'row'
+        flexDirection: 'row',
+        marginLeft: Platform.OS === 'ios' ? -15 : 0,     
     },
     searchIcon: {
         paddingTop: 5,
         paddingLeft: 5
     },
     input: {
-        borderWidth: 0,
-        borderColor: '#e3e5e8',
-        borderRadius: 5,
+        borderWidth: 1,
+        borderColor: '#d1dfe8',
+        borderRadius: 10,
         width: deviceWidth - 60,
-        backgroundColor: '#e3e5e8',
-        height: 36,
+        backgroundColor: '#e0ebf2',
+        height: 35,
         display: 'flex',
         flexDirection: 'row',
-        paddingLeft:0
+        paddingLeft:0,
+        marginTop: Platform.OS === 'ios' ? 0 : -12,             
     },
-    noResults: {
-        paddingTop: 15,
-        paddingLeft: 20,
+    clear: {
+        color:'#6a7d8a',
+        marginLeft:5,
+        marginRight:5,
+        marginTop: Platform.OS === 'ios' ? 6 : -5,                     
     }
 })
 
 Search.propTypes = {
+    displayError: PropTypes.func,
     navigate: PropTypes.func,
+    getLocations: PropTypes.func,
+    updateCoordinates: PropTypes.func,
+    getLocationsByCity: PropTypes.func,
 }
 
 const mapStateToProps = ({ query, user }) => ({ query, user})
 const mapDispatchToProps = (dispatch) => ({
+    displayError: error => dispatch(displayError(error)),
     getLocationsByCity: (city, navigate) => dispatch(getLocationsByCity(city, navigate)),
+    getLocations: (url, isRefetch) => dispatch(fetchLocations(url, isRefetch)),
+    updateCoordinates: (lat, lng) => dispatch(updateCurrCoordinates(lat, lng)),
 })
 export default connect(mapStateToProps, mapDispatchToProps)(Search)

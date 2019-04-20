@@ -55,6 +55,9 @@ class Login extends Component {
 
                     if(data.errors === 'Incorrect password') 
                         this.setState({ passwordError: 'Incorrect password' })
+
+                    if(data.errors === 'User is not yet confirmed. Please follow emailed confirmation instructions.')
+                        this.setState({ apiErrorMsg: 'User is not yet confirmed. Please follow emailed confirmation instructions.'})
                 }
                 if (data.user) {      
                     this.props.login(data.user)
@@ -123,12 +126,14 @@ class Login extends Component {
                                     title="Not a user? SIGN UP!"
                                 />              
                                 <Button
+                                    onPress={() => this.props.navigation.navigate('PasswordReset')}
                                     title="I forgot my password"
                                     titleStyle={s.textLink}
                                     containerStyle={{marginBottom: 20}}
                                     buttonStyle={{backgroundColor:'rgba(255,255,255,.2)',elevation: 0}}
                                 />
                                 <Button
+                                    onPress={() => this.props.navigation.navigate('ResendConfirmation')}
                                     title="Resend my confirmation email"
                                     titleStyle={s.textLink}
                                     containerStyle={{marginBottom: 20}}
@@ -178,8 +183,8 @@ const s = StyleSheet.create({
         width: '100%',
         borderRadius: 30,
         borderWidth: 1,
-        borderColor: '#000e18',
-        backgroundColor: "#ffffff",
+        borderColor: '#97a5af',
+        backgroundColor: "#f5fbff",
         marginTop: 15,
         marginBottom: 15,
     },
