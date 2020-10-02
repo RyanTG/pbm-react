@@ -33,6 +33,7 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Allow access to device location to show nearby places with pinball machines"
       },
+      "associatedDomains": ["applinks:pinballmap.com","applinks:www.pinballmap.com"] ,
       "appStoreUrl": "https://itunes.apple.com/us/app/pinball-map/id359275713?mt=8",
       "config": {
         "googleMapsApiKey": "key",
