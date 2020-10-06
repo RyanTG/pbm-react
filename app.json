@@ -76,6 +76,22 @@
         "backgroundColor": "#4b5862",
         "resizeMode": "contain"
       },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "*.pinballmap.com",
+              "pathPrefix": "*/?by_location_id="
+            },
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.pbm&hl=en",
       "icon": "app/assets/images/android-icon.png"
     },
