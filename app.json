@@ -20,6 +20,7 @@
     "version": "5.1.7",
     "slug": "pbm-app",
     "name": "Pinball Map",
+    "scheme": "pinballmap",
     "description": "Find public places to play pinball! Pinball Map is kept up to date by users and lists over 20,000 pinball machines.",
     "privacy": "public",
     "githubUrl": "https://github.com/bpoore/pbm-react/",
