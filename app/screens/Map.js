@@ -15,6 +15,7 @@ import {
 import { retrieveItem } from '../config/utils'
 import { Ionicons } from '@expo/vector-icons'
 import MapView from 'react-native-maps'
+import markerDot from '../assets/images/markerdot.png'
 import markerDotHeart from '../assets/images/markerdot-heart.png'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import {
@@ -40,7 +41,7 @@ import {
 import androidCustomDark from '../utils/androidCustomDark'
 import { ThemeContext } from '../theme-context'
 
-const MarkerDot = ({numMachines}) => Platform.OS === 'ios' ? <IosMarker numMachines={numMachines}/> : <AndroidMarker numMachines={numMachines}/>
+const MarkerDot = ({numMachines}) => Platform.OS === 'ios' ? <IosMarker numMachines={numMachines}/> : <Image source={markerDot} style={{ height: 20, width: 20 }} numMachines={numMachines} />
 
 MarkerDot.propTypes = {
     numMachines: PropTypes.number,
@@ -61,7 +62,7 @@ const CustomMarker = ({ marker, navigation, s }) => {
             tracksViewChanges={tracksViewChanges}
             pointerEvents="auto"
         >
-            {marker.icon === 'dot' ? <MarkerDot numMachines={marker.machine_names.length} /> : <Image source={markerDotHeart} style={{ height: 28, width: 32 }} onLoad={stopRendering} />}
+            {marker.icon === 'dot' ? <MarkerDot numMachines={marker.machine_names.length} onLoad={stopRendering} /> : <Image source={markerDotHeart} style={{ height: 28, width: 32 }} onLoad={stopRendering} />}
             <MapView.Callout onPress={() => navigation.navigate('LocationDetails', { id: marker.id, locationName: marker.name })}>
                 <View>
                     <View style={s.calloutStyle}>
