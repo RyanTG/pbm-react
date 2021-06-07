@@ -118,7 +118,19 @@ class Map extends Component {
     static contextType = ThemeContext;
 
     onRegionChange = (region) => {
-        if (Math.abs(region.latitude - this.prevRegion.latitude) > 0.0001) {
+        let updateState = false
+        if (region.latitudeDelta > 1) {
+            if (Math.abs(region.latitude - this.prevRegion.latitude) > 0.01) {
+                updateState = true
+            }
+        } else if (region.latitudeDelta > 0.1) {
+            if (Math.abs(region.latitude - this.prevRegion.latitude) > 0.001) {
+                updateState = true
+            }
+        } else if (Math.abs(region.latitude - this.prevRegion.latitude) > 0.0001) {
+            updateState = true
+        }
+        if (updateState) {
             this.setState({
                 ...region,
                 showUpdateSearch: this.state.mapCoordinatesUpdated ? false : true,
