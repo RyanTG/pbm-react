@@ -119,6 +119,8 @@ class Map extends Component {
 
     onRegionChange = (region) => {
         let updateState = false
+        console.log(`latDelta: ${region.latitudeDelta}`)
+        console.log(`region - prevRegion: ${Math.abs(region.latitude - this.prevRegion.latitude)}`)
         if (region.latitudeDelta > 1) {
             if (Math.abs(region.latitude - this.prevRegion.latitude) > 0.01) {
                 updateState = true
