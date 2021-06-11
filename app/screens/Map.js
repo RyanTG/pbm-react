@@ -42,6 +42,7 @@ import androidCustomDark from '../utils/androidCustomDark'
 import { ThemeContext } from '../theme-context'
 import Constants from 'expo-constants'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { isEqual } from 'lodash'
 
 let deviceWidth = Dimensions.get('window').width
 
@@ -117,10 +118,13 @@ class Map extends Component {
 
     static contextType = ThemeContext;
 
-    onRegionChange = (region) => {
+    onRegionChangeComplete = (region) => {
         let updateState = false
         console.log(`latDelta: ${region.latitudeDelta}`)
         console.log(`region - prevRegion: ${Math.abs(region.latitude - this.prevRegion.latitude)}`)
+        if (this.prevRegion && isEqual(this.prevRegion, region)) {
+            return
+        }
         if (region.latitudeDelta > 1) {
             if (Math.abs(region.latitude - this.prevRegion.latitude) > 0.01) {
                 updateState = true
@@ -296,7 +300,7 @@ class Map extends Component {
                             longitudeDelta,
                         }}
                         style={s.map}
-                        onRegionChangeComplete={this.onRegionChange}
+                        onRegionChangeComplete={this.onRegionChangeComplete}
                         showsUserLocation={true}
                         moveOnMarkerPress={false}
                         showsMyLocationButton={false}
