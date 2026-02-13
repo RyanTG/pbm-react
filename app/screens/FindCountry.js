@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import PropTypes from "prop-types";
 import {
+  FlatList,
   Keyboard,
   Platform,
   Pressable,
@@ -13,7 +14,6 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text } from "../components";
 import countries from "../utils/countries";
-import { FlashList } from "@shopify/flash-list";
 
 const FindCountry = ({ navigation, route }) => {
   const { theme } = useContext(ThemeContext);
@@ -115,7 +115,7 @@ const FindCountry = ({ navigation, route }) => {
           </Pressable>
         )}
       </View>
-      <FlashList
+      <FlatList
         {...keyboardDismissProp}
         data={selectedCountries}
         renderItem={renderRow}

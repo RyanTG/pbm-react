@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { FlatList, Linking, Pressable, StyleSheet, View } from "react-native";
 import { ThemeContext } from "../theme-context";
 import {
   ButtonGroup,
@@ -11,7 +11,6 @@ import {
 } from "../components";
 import { getDistance, getDistanceWithUnit } from "../utils/utilityFunctions";
 import { selectLocationListFilterBy } from "../actions/locations_actions";
-import { FlashList } from "@shopify/flash-list";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 const moment = require("moment");
@@ -138,7 +137,7 @@ export class LocationList extends Component {
                   selectedTextStyle={s.selTextStyle}
                   innerBorderStyle={s.innerBorderStyle}
                 />
-                <FlashList
+                <FlatList
                   data={locations}
                   extraData={this.state}
                   renderItem={({ item }) => (

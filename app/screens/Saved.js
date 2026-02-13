@@ -1,13 +1,12 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, FlatList, StyleSheet, View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { ThemeContext } from "../theme-context";
 import { ButtonGroup, LocationCard, NotLoggedIn, Text } from "../components";
 import { getDistance, getDistanceWithUnit } from "../utils/utilityFunctions";
 import { selectFavoriteLocationFilterBy } from "../actions/user_actions";
-import { FlashList } from "@shopify/flash-list";
 
 let deviceWidth = Dimensions.get("window").width;
 
@@ -126,7 +125,7 @@ export class Saved extends Component {
                           right: 0,
                         }}
                       >
-                        <FlashList
+                        <FlatList
                           data={this.state.locations}
                           extraData={this.state}
                           renderItem={({ item }) => (

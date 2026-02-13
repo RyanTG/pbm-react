@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import {
+  FlatList,
   Keyboard,
   Platform,
   Pressable,
@@ -13,7 +14,6 @@ import { ThemeContext } from "../theme-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text } from "../components";
-import { FlashList } from "@shopify/flash-list";
 
 const FindLocationType = ({
   navigation,
@@ -119,7 +119,7 @@ const FindLocationType = ({
           </Pressable>
         )}
       </View>
-      <FlashList
+      <FlatList
         {...keyboardDismissProp}
         data={selectedLocationTypes}
         renderItem={renderRow}
