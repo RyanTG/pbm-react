@@ -16,11 +16,12 @@ Release dates are approximate, given that review times vary between the App Stor
 
 ### 5.3.42
 
-February 10, 2025
+February 16, 2025
 
 - Show icons next to usernames for: site administrator | contributor_rank | operator of that location. See FAQ for more details.
 - Include "New location added" in Activity feeds.
 - Better handling of diacritics and punctuation in the Find Machine screen.
+- Fix issue with machine selection list (and other lists) displaying weird as you type or backspace to filter list.
 
 ### 5.3.41
 
