@@ -20,6 +20,7 @@ import { clearLocationActivityFilter } from "../actions";
 import getActivityIcon from "../utils/getActivityIcon";
 import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
+import flagImages, { getFlagWidth } from "../utils/flagImages";
 
 const moment = require("moment");
 
@@ -140,6 +141,7 @@ const LocationActivity = ({
       location_operator_id,
       admin_title,
       contributor_rank,
+      flag,
     } = activity;
     const time = moment(created_at).format("LL");
     let contributor_icon;
@@ -151,30 +153,33 @@ const LocationActivity = ({
       contributor_icon = require("../assets/images/GrandChampMapper.png");
     }
     const timeAndUser = user_name ? (
-      <Text style={s.date}>
-        <Text style={s.italic}>{time}</Text> by{" "}
-        <Text
-          style={s.username}
-          onPress={() => {
-            if (user_id) {
-              setLocationActivityModalOpen(false);
-              navigation.navigate("UserProfilePublic", {
-                userId: user_id,
-                username: user_name,
-              });
-            }
-          }}
-        >
-          {user_name}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          flexWrap: "wrap",
+          paddingTop: 8,
+        }}
+      >
+        <Text style={[s.date, { paddingTop: 0 }]}>
+          <Text style={s.italic}>{time}</Text>
+          {" by "}
         </Text>
-        <View
-          style={{
-            height: 14,
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-end",
-          }}
-        >
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Text
+            style={[s.date, s.username, { paddingTop: 0 }]}
+            onPress={() => {
+              if (user_id) {
+                setLocationActivityModalOpen(false);
+                navigation.navigate("UserProfilePublic", {
+                  userId: user_id,
+                  username: user_name,
+                });
+              }
+            }}
+          >
+            {user_name}
+          </Text>
           {!!admin_title && (
             <MaterialCommunityIcons
               name="shield-account"
@@ -199,8 +204,14 @@ const LocationActivity = ({
               color={theme.wrench}
             />
           )}
+          {!!flag && flagImages[flag] && (
+            <Image
+              source={flagImages[flag]}
+              style={[s.flagIcon, { width: getFlagWidth(flag, 15) }]}
+            />
+          )}
         </View>
-      </Text>
+      </View>
     ) : (
       <Text style={s.date}>{time}</Text>
     );
@@ -577,7 +588,11 @@ const getStyles = (theme) =>
       width: 15,
       height: 15,
       marginLeft: 6,
-      marginBottom: -3,
+    },
+    flagIcon: {
+      height: 15,
+      marginLeft: 7,
+      borderRadius: 3,
     },
     operatorIcon: {
       marginLeft: 7,

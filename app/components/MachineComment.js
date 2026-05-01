@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
+import flagImages, { getFlagWidth } from "../utils/flagImages";
 
 const moment = require("moment");
 
@@ -38,6 +39,7 @@ const MachineComment = ({ commentObj, user, location: loc, operators }) => {
     id: commentId,
     admin_title,
     contributor_rank,
+    flag,
   } = commentObj;
   const { location } = loc;
   const operator =
@@ -147,39 +149,50 @@ const MachineComment = ({ commentObj, user, location: loc, operators }) => {
                 style={[
                   s.subtitleStyle,
                   s.subtitleMargin,
-                  { flexDirection: "row", alignItems: "center" },
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  },
                 ]}
               >
-                {!!username && (
-                  <Text
-                    style={[s.username]}
-                    onPress={() =>
-                      commentUserId &&
-                      navigation.navigate("UserProfilePublic", {
-                        userId: commentUserId,
-                        username,
-                      })
-                    }
-                  >
-                    {username}
-                  </Text>
-                )}
-                {!!(admin_title || contributor_rank) && <Text>{` `}</Text>}
-                {!!admin_title && (
-                  <MaterialCommunityIcons
-                    name="shield-account"
-                    size={15}
-                    color={theme.shield}
-                    style={[s.rankIcon, { marginRight: 3 }]}
-                  />
-                )}
-                {!!contributor_rank && (
-                  <Image
-                    contentFit="fill"
-                    source={contributor_icon}
-                    style={s.rankIcon}
-                  />
-                )}
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  {!!username && (
+                    <Text
+                      style={[s.username]}
+                      onPress={() =>
+                        commentUserId &&
+                        navigation.navigate("UserProfilePublic", {
+                          userId: commentUserId,
+                          username,
+                        })
+                      }
+                    >
+                      {username}
+                    </Text>
+                  )}
+                  {!!admin_title && (
+                    <MaterialCommunityIcons
+                      name="shield-account"
+                      size={15}
+                      color={theme.shield}
+                      style={[s.rankIcon, { marginRight: 3 }]}
+                    />
+                  )}
+                  {!!contributor_rank && (
+                    <Image
+                      contentFit="fill"
+                      source={contributor_icon}
+                      style={s.rankIcon}
+                    />
+                  )}
+                  {!!flag && flagImages[flag] && (
+                    <Image
+                      source={flagImages[flag]}
+                      style={[s.flagIcon, { width: getFlagWidth(flag, 15) }]}
+                    />
+                  )}
+                </View>
                 <Text style={[s.italic, s.date]}>
                   {moment(updated_at).format("MMM DD, YYYY")}
                 </Text>
@@ -305,6 +318,11 @@ const getStyles = (theme) =>
       width: 15,
       height: 15,
       marginLeft: 3,
+    },
+    flagIcon: {
+      height: 15,
+      marginLeft: 7,
+      borderRadius: 3,
     },
   });
 

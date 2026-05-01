@@ -20,9 +20,6 @@ import { ThemeContext } from "../theme-context";
 import { ConfirmationModal, WarningButton, PbmButton } from ".";
 import { deleteScore, editScore } from "../actions";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { Image } from "expo-image";
 
 const moment = require("moment");
 
@@ -30,19 +27,9 @@ const MachineScore = ({ scoreObj, user, onScoreMutated }) => {
   const dispatch = useDispatch();
   const { theme } = useContext(ThemeContext);
   const s = getStyles(theme);
-  const navigation = useNavigation();
   const [loading, setIsLoading] = useState(false);
   const insets = useSafeAreaInsets();
-  const {
-    score: initialScore,
-    created_at,
-    updated_at,
-    username,
-    user_id: scoreUserId,
-    id: scoreId,
-    admin_title,
-    contributor_rank,
-  } = scoreObj;
+  const { score: initialScore, created_at, updated_at, id: scoreId } = scoreObj;
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [score, setScore] = useState(initialScore);
@@ -84,15 +71,6 @@ const MachineScore = ({ scoreObj, user, onScoreMutated }) => {
     setEditModalVisible(false);
     setScore(initialScore);
   };
-
-  let contributor_icon;
-  if (contributor_rank == "Super Mapper") {
-    contributor_icon = require("../assets/images/SuperMapper.png");
-  } else if (contributor_rank == "Legendary Mapper") {
-    contributor_icon = require("../assets/images/LegendaryMapper.png");
-  } else if (contributor_rank == "Grand Champ Mapper") {
-    contributor_icon = require("../assets/images/GrandChampMapper.png");
-  }
 
   return (
     <ThemeContext.Consumer>
@@ -164,43 +142,13 @@ const MachineScore = ({ scoreObj, user, onScoreMutated }) => {
                   { flexDirection: "row", alignItems: "center" },
                 ]}
               >
-                {!!username && (
-                  <Text
-                    style={[s.username]}
-                    onPress={() =>
-                      scoreUserId &&
-                      navigation.navigate("UserProfilePublic", {
-                        userId: scoreUserId,
-                        username,
-                      })
-                    }
-                  >
-                    {username}
-                  </Text>
-                )}
-                {!!(admin_title || contributor_rank) && <Text>{` `}</Text>}
-                {!!admin_title && (
-                  <MaterialCommunityIcons
-                    name="shield-account"
-                    size={15}
-                    color={theme.shield}
-                    style={[s.rankIcon, { marginRight: 3 }]}
-                  />
-                )}
-                {!!contributor_rank && (
-                  <Image
-                    contentFit="fill"
-                    source={contributor_icon}
-                    style={s.rankIcon}
-                  />
-                )}
                 <Text style={[s.italic, s.date]}>
                   {moment(updated_at).format("MMM DD, YYYY")}
                 </Text>
                 {created_at !== updated_at && (
                   <Text style={{ color: theme.text3 }}>{`*`}</Text>
                 )}
-                {user?.id && user.id === scoreUserId && (
+                {!!user?.id && (
                   <>
                     <Text
                       style={[s.editDelete, { marginHorizontal: 8 }]}
@@ -256,11 +204,6 @@ const getStyles = (theme) =>
       marginHorizontal: 0,
       fontSize: 14,
     },
-    username: {
-      color: theme.pink1,
-      marginLeft: 6,
-      textDecorationLine: "underline",
-    },
     italic: {
       fontFamily: "Nunito-Italic",
       color: theme.text3,
@@ -293,11 +236,6 @@ const getStyles = (theme) =>
       fontSize: 18,
       fontFamily: "Nunito-Bold",
       color: theme.text,
-    },
-    rankIcon: {
-      width: 15,
-      height: 15,
-      marginLeft: 3,
     },
   });
 

@@ -51,6 +51,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { Image } from "expo-image";
+import flagImages, { getFlagWidth } from "../utils/flagImages";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_PUBLIC);
 
@@ -686,6 +687,23 @@ const LocationDetails = (props) => {
                                 color={theme.wrench}
                               />
                             )}
+                          {!!location.last_updated_by_flag &&
+                            flagImages[location.last_updated_by_flag] && (
+                              <Image
+                                source={
+                                  flagImages[location.last_updated_by_flag]
+                                }
+                                style={[
+                                  s.flagIcon,
+                                  {
+                                    width: getFlagWidth(
+                                      location.last_updated_by_flag,
+                                      15,
+                                    ),
+                                  },
+                                ]}
+                              />
+                            )}
                         </View>
                       </Text>
                     </Text>
@@ -1085,6 +1103,12 @@ const getStyles = (theme) =>
       width: 15,
       height: 15,
       marginLeft: 6,
+      marginBottom: -3,
+    },
+    flagIcon: {
+      height: 15,
+      marginLeft: 7,
+      borderRadius: 3,
       marginBottom: -3,
     },
     operatorIcon: {

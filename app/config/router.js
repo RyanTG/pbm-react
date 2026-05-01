@@ -35,6 +35,7 @@ import FindManufacturer from "../screens/FindManufacturer";
 import Settings from "../screens/Settings";
 import Resources from "../screens/Resources";
 import FindCountry from "../screens/FindCountry";
+import FindFlag from "../screens/FindFlag";
 import Stats from "../screens/Stats";
 
 import { DrawerMenu } from "../components";
@@ -418,6 +419,11 @@ function MapStack() {
         name="FindCountry"
         component={FindCountry}
         options={{ title: "Select Country" }}
+      />
+      <Stack.Screen
+        name="FindFlag"
+        component={FindFlag}
+        options={{ title: "Select Flag" }}
       />
       <Stack.Screen
         name="UserProfilePublic"

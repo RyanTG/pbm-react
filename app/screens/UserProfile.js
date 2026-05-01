@@ -17,6 +17,7 @@ import {
 import { getData } from "../config/request";
 import { logout } from "../actions";
 import { formatNumWithCommas } from "../utils/utilityFunctions";
+import flagImages, { getFlagWidth } from "../utils/flagImages";
 import * as WebBrowser from "expo-web-browser";
 const moment = require("moment");
 
@@ -77,6 +78,7 @@ class UserProfile extends Component {
       admin_title,
       contributor_rank,
       operator_name,
+      flag,
     } = profileInfo;
 
     let contributor_icon;
@@ -124,6 +126,30 @@ class UserProfile extends Component {
                   )}
                   <View style={s.usernameContainer}>
                     <Text style={s.username}>{displayUsername}</Text>
+                    {!!flag && flagImages[flag] && (
+                      <View style={s.flagContainer}>
+                        <Image
+                          source={flagImages[flag]}
+                          style={[
+                            s.profileFlag,
+                            { width: getFlagWidth(flag, 40) },
+                          ]}
+                        />
+                      </View>
+                    )}
+                    {isOwnProfile && (
+                      <Pressable
+                        onPress={() =>
+                          this.props.navigation.navigate("FindFlag", {
+                            userId: user.id,
+                          })
+                        }
+                      >
+                        <Text style={s.flagButton}>
+                          {flag ? "Change flag" : "Set flag"}
+                        </Text>
+                      </Pressable>
+                    )}
                     {!!admin_title && (
                       <View style={s.rankView}>
                         <Text style={s.rankText}>{admin_title}</Text>
@@ -412,6 +438,23 @@ const getStyles = (theme) =>
       fontFamily: "Nunito-ExtraBold",
       lineHeight: 32,
       color: theme.pink1,
+    },
+    flagContainer: {
+      alignItems: "center",
+      marginTop: 10,
+    },
+    profileFlag: {
+      height: 40,
+      borderRadius: 5,
+    },
+    flagButton: {
+      color: theme.purple2,
+      fontSize: 14,
+      fontFamily: "Nunito-SemiBold",
+      textAlign: "center",
+      textDecorationLine: "underline",
+      marginTop: 8,
+      marginBottom: 2,
     },
     statContainer: {
       alignItems: "center",
