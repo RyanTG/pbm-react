@@ -24,7 +24,14 @@ import {
   LMX_MUTATED,
 } from "./types";
 
-import { getData, postData, putData, deleteData } from "../config/request";
+import * as ImageManipulator from "expo-image-manipulator";
+import {
+  getData,
+  postData,
+  postFormData,
+  putData,
+  deleteData,
+} from "../config/request";
 import { coordsToBounds } from "../utils/utilityFunctions";
 import { triggerUpdateBounds } from "./locations_actions";
 
@@ -372,6 +379,48 @@ export const setSelectedLocationType = (id) => {
     type: SET_SELECTED_LOCATION_TYPE,
     id,
   };
+};
+
+export const fetchLocationPictures = (locationId) => () => {
+  return getData(
+    `/locations/${locationId}/picture_details.json?thumbnail=1`,
+  ).then((data) => data.pictures ?? []);
+};
+
+export const uploadLocationPicture =
+  (locationId, imageUri, imageWidth, imageHeight) =>
+  async (dispatch, getState) => {
+    const { email, authentication_token } = getState().user;
+
+    const resize =
+      imageWidth >= imageHeight
+        ? { width: Math.min(imageWidth, 1200) }
+        : { height: Math.min(imageHeight, 1200) };
+
+    const { uri } = await ImageManipulator.manipulateAsync(
+      imageUri,
+      [{ resize }],
+      { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG },
+    );
+
+    const formData = new FormData();
+    formData.append("location_id", locationId);
+    formData.append("user_email", email);
+    formData.append("user_token", authentication_token);
+    formData.append("photo", { uri, name: "photo.jpg", type: "image/jpeg" });
+    return postFormData("/location_picture_xrefs.json", formData);
+  };
+
+export const deleteLocationPicture = (lpxId) => (dispatch, getState) => {
+  const { email, authentication_token } = getState().user;
+  const body = { user_email: email, user_token: authentication_token };
+  return deleteData(`/location_picture_xrefs/${lpxId}.json`, body);
+};
+
+export const fetchLocationPictureFullRes = (lpxId) => () => {
+  return getData(`/location_picture_xrefs/${lpxId}.json`).then(
+    (data) => data.location_picture,
+  );
 };
 
 export const deleteCondition = (conditionId, user) => (dispatch, getState) => {

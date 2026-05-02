@@ -425,8 +425,7 @@ const getStyles = (theme) =>
       fontFamily: "Nunito-Bold",
     },
     usernameContainer: {
-      paddingTop: 10,
-      paddingBottom: 14,
+      paddingVertical: 10,
       backgroundColor: theme.theme == "dark" ? theme.white : "#efe9f0",
       marginTop: 20,
       marginHorizontal: 20,
@@ -488,7 +487,8 @@ const getStyles = (theme) =>
     },
     joined: {
       textAlign: "center",
-      marginVertical: 8,
+      marginTop: 8,
+      marginBottom: 6,
       fontSize: 16,
       color: theme.text3,
       fontFamily: "Nunito-Italic",

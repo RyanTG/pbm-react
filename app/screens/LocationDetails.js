@@ -4,6 +4,7 @@ import {
   Alert,
   Dimensions,
   Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +12,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import Mapbox from "@rnmapbox/maps";
 import openMap from "react-native-open-maps";
 import { FontAwesome6, MaterialIcons } from "@expo/vector-icons";
@@ -28,15 +30,20 @@ import {
 } from "../components";
 import {
   confirmLocationIsUpToDate,
+  deleteLocationPicture,
   fetchLocation,
+  fetchLocationPictures,
+  fetchLocationPictureFullRes,
   setCurrentMachine,
   setSelectedMapLocation,
   updateMap,
+  uploadLocationPicture,
 } from "../actions";
 import {
   alphaSortNameObj,
   getDistanceWithUnit,
 } from "../utils/utilityFunctions";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
 import * as WebBrowser from "expo-web-browser";
 import { useNavigation, useTheme } from "@react-navigation/native";
@@ -71,6 +78,15 @@ const LocationDetails = (props) => {
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [copiedNotice, setCopiedNotice] = useState(false);
+  const [pictures, setPictures] = useState([]);
+  const [photoModalVisible, setPhotoModalVisible] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [fullResUrl, setFullResUrl] = useState(null);
+  const [fullResLoading, setFullResLoading] = useState(false);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [deletingPicture, setDeletingPicture] = useState(false);
+  const [photoTipsModalVisible, setPhotoTipsModalVisible] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const copiedTimeoutRef = useRef(null);
   const insets = useSafeAreaInsets();
   const topMargin = insets.top;
@@ -104,6 +120,9 @@ const LocationDetails = (props) => {
       }
       dispatch(setSelectedMapLocation(null));
       Mapbox.setTelemetryEnabled(false);
+      dispatch(fetchLocationPictures(locationId))
+        .then(setPictures)
+        .catch(() => {});
     };
     onMount();
 
@@ -174,6 +193,96 @@ const LocationDetails = (props) => {
     dispatch(updateMap(location.lat, location.lon));
     dispatch(setSelectedMapLocation(location.id));
     navigation.navigate("MapTab", { pop: true });
+  };
+
+  const openPhotoModal = (index, pics = pictures) => {
+    setPhotoIndex(index);
+    setFullResUrl(null);
+    setDeleteConfirmVisible(false);
+    setPhotoModalVisible(true);
+    setFullResLoading(true);
+    dispatch(fetchLocationPictureFullRes(pics[index].id))
+      .then((data) => setFullResUrl(data.url))
+      .catch(() => {})
+      .finally(() => setFullResLoading(false));
+  };
+
+  const goToPrevPhoto = () => {
+    const newIndex = photoIndex - 1;
+    setPhotoIndex(newIndex);
+    setFullResUrl(null);
+    setDeleteConfirmVisible(false);
+    setFullResLoading(true);
+    dispatch(fetchLocationPictureFullRes(pictures[newIndex].id))
+      .then((data) => setFullResUrl(data.url))
+      .catch(() => {})
+      .finally(() => setFullResLoading(false));
+  };
+
+  const goToNextPhoto = () => {
+    const newIndex = photoIndex + 1;
+    setPhotoIndex(newIndex);
+    setFullResUrl(null);
+    setDeleteConfirmVisible(false);
+    setFullResLoading(true);
+    dispatch(fetchLocationPictureFullRes(pictures[newIndex].id))
+      .then((data) => setFullResUrl(data.url))
+      .catch(() => {})
+      .finally(() => setFullResLoading(false));
+  };
+
+  const openPhotoPicker = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: false,
+      quality: 0.9,
+    });
+    if (result.canceled) return;
+    const { uri, width, height } = result.assets[0];
+    setUploadingPicture(true);
+    dispatch(uploadLocationPicture(location.id, uri, width, height))
+      .then(() =>
+        dispatch(fetchLocationPictures(location.id)).then(setPictures),
+      )
+      .catch(() => Alert.alert("Upload failed. Please try again."))
+      .finally(() => setUploadingPicture(false));
+  };
+
+  const handleUploadPicture = async () => {
+    if (!loggedIn) {
+      navigation.navigate("Login");
+      return;
+    }
+    const seen = await AsyncStorage.getItem("photoTipsSeen");
+    if (seen) {
+      openPhotoPicker();
+    } else {
+      setPhotoTipsModalVisible(true);
+    }
+  };
+
+  const handlePhotoTipsConfirm = async () => {
+    await AsyncStorage.setItem("photoTipsSeen", "true");
+    setPhotoTipsModalVisible(false);
+    setTimeout(openPhotoPicker, 300);
+  };
+
+  const handleDeletePicture = () => {
+    const lpxId = pictures[photoIndex].id;
+    setDeletingPicture(true);
+    dispatch(deleteLocationPicture(lpxId))
+      .then(() => {
+        const newPictures = pictures.filter((p) => p.id !== lpxId);
+        setPictures(newPictures);
+        if (newPictures.length === 0) {
+          setPhotoModalVisible(false);
+        } else {
+          const newIndex = Math.min(photoIndex, newPictures.length - 1);
+          openPhotoModal(newIndex, newPictures);
+        }
+      })
+      .catch(() => Alert.alert("Delete failed. Please try again."))
+      .finally(() => setDeletingPicture(false));
   };
 
   if (
@@ -251,6 +360,133 @@ const LocationDetails = (props) => {
         scrollIndicatorInsets={{ right: 1 }}
         contentContainerStyle={{ paddingBottom: insets.bottom }}
       >
+        <Modal
+          visible={photoModalVisible}
+          animationType="fade"
+          transparent={true}
+          statusBarTranslucent={true}
+          navigationBarTranslucent={true}
+          onRequestClose={() => setPhotoModalVisible(false)}
+        >
+          <View style={s.photoModalOverlay}>
+            <Pressable
+              style={s.photoModalClose}
+              onPress={() => setPhotoModalVisible(false)}
+            >
+              <MaterialCommunityIcons
+                name="close-circle"
+                size={36}
+                color="white"
+              />
+            </Pressable>
+
+            <View style={s.photoModalImageContainer}>
+              {fullResLoading ? (
+                <ActivityIndicator />
+              ) : fullResUrl ? (
+                <Image
+                  source={{ uri: fullResUrl }}
+                  style={s.photoModalImage}
+                  contentFit="contain"
+                />
+              ) : null}
+            </View>
+
+            <View style={s.photoModalNav}>
+              <Pressable
+                onPress={goToPrevPhoto}
+                disabled={photoIndex === 0}
+                style={[
+                  s.photoNavButton,
+                  photoIndex === 0 && s.photoNavDisabled,
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="chevron-left"
+                  size={36}
+                  color={photoIndex === 0 ? "rgba(255,255,255,0.3)" : "white"}
+                />
+              </Pressable>
+              <Text style={s.photoCounter}>
+                {photoIndex + 1} / {pictures.length}
+              </Text>
+              <Pressable
+                onPress={goToNextPhoto}
+                disabled={photoIndex === pictures.length - 1}
+                style={[
+                  s.photoNavButton,
+                  photoIndex === pictures.length - 1 && s.photoNavDisabled,
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={36}
+                  color={
+                    photoIndex === pictures.length - 1
+                      ? "rgba(255,255,255,0.3)"
+                      : "white"
+                  }
+                />
+              </Pressable>
+            </View>
+
+            {loggedIn && (
+              <View style={s.photoModalDeleteContainer}>
+                {deleteConfirmVisible ? (
+                  <View style={s.deleteConfirmContainer}>
+                    <Text style={s.deleteConfirmText}>Delete this photo?</Text>
+                    <View style={s.deleteConfirmRow}>
+                      <PbmButton
+                        title={deletingPicture ? "Deleting…" : "Yes, delete"}
+                        onPress={handleDeletePicture}
+                        disabled={deletingPicture}
+                        margin={{ marginHorizontal: 6, marginVertical: 0 }}
+                      />
+                      <WarningButton
+                        title="Cancel"
+                        onPress={() => setDeleteConfirmVisible(false)}
+                        margin={{ marginHorizontal: 6, marginVertical: 0 }}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <WarningButton
+                    title={"Delete"}
+                    margin={s.deleteButton}
+                    onPress={() => setDeleteConfirmVisible(true)}
+                    leftIcon={
+                      <FontAwesome6
+                        size={18}
+                        color="#ffffff"
+                        name="trash-can"
+                        style={{ marginRight: 10 }}
+                      />
+                    }
+                  />
+                )}
+              </View>
+            )}
+          </View>
+        </Modal>
+
+        <ConfirmationModal
+          visible={photoTipsModalVisible}
+          closeModal={() => setPhotoTipsModalVisible(false)}
+        >
+          <Text style={s.confirmText}>Photo Tips</Text>
+          <Text style={s.photoTipsText}>
+            Choose a picture that gives a feel for the place. No need to include
+            a picture of every single machine.
+          </Text>
+          <PbmButton
+            title={"Choose a Photo"}
+            onPress={handlePhotoTipsConfirm}
+          />
+          <WarningButton
+            title={"Cancel"}
+            onPress={() => setPhotoTipsModalVisible(false)}
+          />
+        </ConfirmationModal>
         <ConfirmationModal
           visible={confirmModalVisible}
           closeModal={() => setConfirmModalVisible(false)}
@@ -397,6 +633,26 @@ const LocationDetails = (props) => {
                 <View style={s.nameItem}>
                   <Text style={s.locationName}>{location.name}</Text>
                 </View>
+                <Pressable
+                  style={({ pressed }) => [
+                    s.editDetailsIcon,
+                    s.boxShadow,
+                    pressed ? s.quickButtonPressed : s.quickButtonNotPressed,
+                  ]}
+                  onPress={() =>
+                    loggedIn
+                      ? navigation.navigate("EditLocationDetails")
+                      : navigation.navigate("Login")
+                  }
+                >
+                  <MaterialCommunityIcons
+                    name="pencil"
+                    color={
+                      theme.theme == "dark" ? theme.purpleLight : theme.purple
+                    }
+                    size={18}
+                  />
+                </Pressable>
                 <View style={s.heartItem}>
                   <FavoriteLocation
                     locationId={location.id}
@@ -617,37 +873,46 @@ const LocationDetails = (props) => {
                 )}
 
                 {!!location.date_last_updated && (
-                  <View
-                    style={[
-                      s.marginB,
-                      s.marginRight,
-                      {
+                  <View style={[s.marginB, s.marginRight, { paddingRight: 5 }]}>
+                    <View
+                      style={{ flexDirection: "row", alignItems: "flex-start" }}
+                    >
+                      <MaterialCommunityIcons
+                        name="lightning-bolt"
+                        style={s.metaIcon}
+                      />
+                      <Text style={[s.text3, s.fontSize14]}>
+                        {`Location edited ${formatNumWithCommas(location.user_submissions_count)} times by ${formatNumWithCommas(location.users_count)} user${location.users_count == 1 ? "" : "s"}.`}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
                         flexDirection: "row",
                         alignItems: "center",
-                        paddingRight: 5,
-                      },
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name="lightning-bolt"
-                      style={s.metaIcon}
-                    />
-                    <Text style={[s.text3, s.fontSize14]}>
-                      {`Location edited ${formatNumWithCommas(location.user_submissions_count)} times by ${formatNumWithCommas(location.users_count)} user${location.users_count == 1 ? "" : "s"}. Last updated: `}
-                      <Text style={s.text3}>
+                        flexWrap: "wrap",
+                        marginLeft: 23,
+                      }}
+                    >
+                      <Text style={[s.text3, s.fontSize14]}>
+                        {"Last updated "}
                         <Text style={s.italic}>
                           {moment(
                             location.date_last_updated,
                             "YYYY-MM-DD",
                           ).format("MMM DD, YYYY")}
                         </Text>
-                        {!!location.last_updated_by_username && ` by `}
-                        {!!location.last_updated_by_username && (
+                        {!!location.last_updated_by_username && " by "}
+                      </Text>
+                      {!!location.last_updated_by_username && (
+                        <View
+                          style={{ flexDirection: "row", alignItems: "center" }}
+                        >
                           <Text
                             style={{
                               fontFamily: "Nunito-SemiBold",
                               color: theme.pink1,
                               textDecorationLine: "underline",
+                              fontSize: 14,
                             }}
                             onPress={() =>
                               location.last_updated_by_user_id &&
@@ -657,10 +922,8 @@ const LocationDetails = (props) => {
                               })
                             }
                           >
-                            {`${location.last_updated_by_username}`}
+                            {location.last_updated_by_username}
                           </Text>
-                        )}
-                        <View style={s.iconView}>
                           {!!location.last_updated_by_admin_title && (
                             <MaterialCommunityIcons
                               name="shield-account"
@@ -705,8 +968,8 @@ const LocationDetails = (props) => {
                               />
                             )}
                         </View>
-                      </Text>
-                    </Text>
+                      )}
+                    </View>
                   </View>
                 )}
                 {dateDiff >= 2 && (
@@ -717,6 +980,29 @@ const LocationDetails = (props) => {
                       {`. Please help update the listing!`}
                     </Text>
                   </Animated.View>
+                )}
+
+                {pictures.length > 0 && (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={s.photoStrip}
+                    contentContainerStyle={s.photoStripContent}
+                  >
+                    {pictures.map((pic, index) => (
+                      <Pressable
+                        key={pic.id}
+                        onPress={() => openPhotoModal(index)}
+                        style={s.photoThumb}
+                      >
+                        <Image
+                          source={{ uri: pic.url }}
+                          style={s.photoThumbImage}
+                          contentFit="cover"
+                        />
+                      </Pressable>
+                    ))}
+                  </ScrollView>
                 )}
 
                 <View style={s.quickButtonContainer}>
@@ -792,31 +1078,28 @@ const LocationDetails = (props) => {
                           ? s.quickButtonPressed
                           : s.quickButtonNotPressed,
                       ]}
-                      onPress={() => {
-                        if (loggedIn) {
-                          navigation.navigate("EditLocationDetails");
-                        } else {
-                          navigation.navigate("Login");
-                        }
-                      }}
+                      onPress={handleUploadPicture}
+                      disabled={uploadingPicture}
                     >
                       <MaterialCommunityIcons
-                        name={"pencil-outline"}
+                        name={
+                          uploadingPicture ? "loading" : "camera-plus-outline"
+                        }
                         color={
                           theme.theme == "dark"
                             ? theme.purpleLight
                             : theme.purple
                         }
-                        size={30}
+                        size={28}
                         style={{
-                          height: 30,
-                          width: 30,
+                          height: 28,
+                          width: 28,
                           justifyContent: "center",
                           alignSelf: "center",
                         }}
                       />
                     </Pressable>
-                    <Text style={s.quickButtonText}>Edit details</Text>
+                    <Text style={s.quickButtonText}>Add photo</Text>
                   </View>
                 </View>
               </View>
@@ -1090,6 +1373,15 @@ const getStyles = (theme) =>
       color: theme.purpleLight,
       fontFamily: "Nunito-Bold",
     },
+    photoTipsText: {
+      textAlign: "center",
+      marginHorizontal: 15,
+      marginTop: 10,
+      marginBottom: 5,
+      fontSize: 15,
+      color: theme.text,
+      fontFamily: "Nunito-Regular",
+    },
     upButton: {
       justifyContent: "center",
       position: "absolute",
@@ -1103,25 +1395,117 @@ const getStyles = (theme) =>
       width: 15,
       height: 15,
       marginLeft: 6,
-      marginBottom: -3,
     },
     flagIcon: {
       height: 15,
       marginLeft: 7,
       borderRadius: 3,
-      marginBottom: -3,
     },
     operatorIcon: {
       marginLeft: 7,
     },
-    iconView: {
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "center",
-    },
     operatorContactIcon: {
       marginLeft: 8,
       padding: 3,
+    },
+    editDetailsIcon: {
+      justifyContent: "center",
+      alignItems: "center",
+      height: 34,
+      width: 34,
+      borderRadius: 17,
+      borderWidth: 1,
+      borderColor: theme.pink2,
+      marginRight: 4,
+    },
+    photoStrip: {
+      marginVertical: 8,
+    },
+    photoStripContent: {
+      paddingHorizontal: 5,
+      gap: 8,
+    },
+    photoThumb: {
+      width: 80,
+      height: 80,
+      borderRadius: 8,
+      overflow: "hidden",
+    },
+    photoThumbImage: {
+      width: 80,
+      height: 80,
+    },
+    photoModalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.93)",
+      justifyContent: "center",
+    },
+    photoModalClose: {
+      position: "absolute",
+      top: 50,
+      right: 16,
+      zIndex: 10,
+    },
+    photoModalImageContainer: {
+      flex: 1,
+      justifyContent: "center",
+      marginTop: 90,
+      marginBottom: 10,
+    },
+    photoModalImage: {
+      width: "100%",
+      height: "100%",
+    },
+    photoModalNav: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 12,
+      gap: 20,
+    },
+    photoNavButton: {
+      padding: 8,
+    },
+    photoNavDisabled: {
+      opacity: 0.3,
+    },
+    photoCounter: {
+      color: "white",
+      fontFamily: "Nunito-SemiBold",
+      fontSize: 15,
+      minWidth: 50,
+      textAlign: "center",
+    },
+    photoModalDeleteContainer: {
+      alignItems: "center",
+      paddingBottom: 36,
+      paddingTop: 4,
+    },
+    deleteButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+    },
+    deleteButtonText: {
+      color: "white",
+      fontFamily: "Nunito-SemiBold",
+      fontSize: 14,
+    },
+    deleteConfirmContainer: {
+      alignItems: "center",
+      gap: 10,
+    },
+    deleteConfirmRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    deleteConfirmText: {
+      color: "white",
+      fontFamily: "Nunito-Regular",
+      fontSize: 14,
     },
     copiedNoticeWrapper: {
       position: "absolute",

@@ -117,6 +117,36 @@ export const getIfpaTournament = (tournament_id) => {
     .catch((err) => Promise.reject(err));
 };
 
+export const postFormData = (uri, formData) => {
+  return fetch(global.API_URL + uri, {
+    method: "post",
+    headers: {
+      Accept: "application/json",
+      AppVersion: Application.nativeApplicationVersion,
+    },
+    body: formData,
+  })
+    .then(async (response) => {
+      if (response.status === 401) handleAccountDisabled();
+
+      const data = await response.json();
+
+      if (data.errors) {
+        throw data.errors;
+      }
+
+      if (data.error) {
+        throw data.error;
+      }
+
+      if (response.ok) return data;
+    })
+    .catch((err) => {
+      const errorText = typeof err === "object" ? err.toString() : err;
+      return Promise.reject(errorText);
+    });
+};
+
 export const deleteData = (uri, body) => {
   return fetch(global.API_URL + uri, {
     method: "delete",
