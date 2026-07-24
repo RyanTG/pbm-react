@@ -1,4 +1,5 @@
 import { createSelector } from "reselect";
+import { buildFilterSummary } from "../utils/filterSummary";
 
 const locationTypes = ({ locations }) => locations.locationTypes;
 
@@ -52,6 +53,19 @@ export const filterSelected = createSelector(queryState, (query) =>
   query.locationIcFilter
     ? true
     : false,
+);
+
+const machinesCatalog = ({ machines }) => machines.machines;
+
+export const getFilterSummaryText = createSelector(
+  [queryState, machinesCatalog, operators, locationTypes],
+  (query, machinesCatalog, operators, locationTypes) =>
+    buildFilterSummary({
+      query,
+      machines: machinesCatalog,
+      operators,
+      locationTypes,
+    }),
 );
 
 const mapMarkers = ({ locations }) => locations.mapMarkers;

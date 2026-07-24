@@ -7,7 +7,7 @@ export default {
       enabled: false,
     },
     runtimeVersion: "1.0.0",
-    version: "5.4.13",
+    version: "5.4.14",
     slug: "pbm-app",
     owner: "pinballmap",
     name: IS_DEV ? "Pinball Map (Dev)" : "Pinball Map",
@@ -104,7 +104,7 @@ export default {
         dark: "app/assets/images/ios-icon-dark.png",
         tinted: "app/assets/images/ios-icon-tinted.png",
       },
-      buildNumber: "291",
+      buildNumber: "292",
       supportsTablet: true,
       associatedDomains: [
         "applinks:pinballmap.com",

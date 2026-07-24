@@ -571,7 +571,7 @@ const getStyles = (theme) =>
       textDecorationLine: "underline",
       fontFamily: "Nunito-Bold",
       fontSize: 16,
-      color: theme.theme == "dark" ? "#e3fae5" : theme.text,
+      color: theme.text,
     },
     bottomTabApplyButton: {
       borderRadius: 30,
@@ -582,7 +582,7 @@ const getStyles = (theme) =>
       paddingHorizontal: 15,
       fontFamily: "Nunito-Bold",
       fontSize: 15,
-      color: "#ffffff",
+      color: theme.white,
     },
     yearRangeContainer: {
       flexDirection: "row",

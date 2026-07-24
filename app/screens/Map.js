@@ -12,6 +12,7 @@ import MaterialCommunityIcons from "@react-native-vector-icons/material-design-i
 import {
   ActivityIndicator,
   AppAlert,
+  ConfirmationModal,
   CustomMapMarkers,
   Search,
   Text,
@@ -41,7 +42,7 @@ import {
   setLocationIcFilter,
   updateNumMachinesSelected,
 } from "../actions";
-import { getSelectedMapLocation } from "../selectors";
+import { getSelectedMapLocation, getFilterSummaryText } from "../selectors";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -65,6 +66,7 @@ const Map = ({
   machines,
   locationTypes,
   operators,
+  filterSummary,
 }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -76,6 +78,7 @@ const Map = ({
   const [showUpdateSearch, setShowUpdateSearch] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [loadedTheme, setLoadedTheme] = useState(null);
+  const [filterInfoVisible, setFilterInfoVisible] = useState(false);
   const toCurrentLocationRef = useRef(false);
   const themeRef = useRef(theme.theme);
   const mapInitializedRef = useRef(false);
@@ -87,39 +90,15 @@ const Map = ({
     swLon,
     neLat,
     neLon,
-    machineId = false,
-    machineIds = [],
-    locationType = false,
-    locationTypeIds = [],
-    numMachines = false,
-    selectedOperator = false,
-    viewByFavoriteLocations,
-    icFilter,
-    manufacturerFilter = [],
-    machineTypeFilter = "",
-    machineYearGte = null,
-    machineYearLte = null,
-    locationIcFilter = false,
     triggerUpdateBounds: shouldTriggerUpdateBounds,
   } = query;
   const latitude = (swLat + neLat) / 2;
   const longitude = (swLon + neLon) / 2;
-  const filterApplied =
-    machineId ||
-    machineIds.length > 0 ||
-    locationType ||
-    locationTypeIds.length > 0 ||
-    numMachines ||
-    selectedOperator ||
-    viewByFavoriteLocations ||
-    icFilter ||
-    manufacturerFilter.length > 0 ||
-    machineTypeFilter !== "" ||
-    machineYearGte !== null ||
-    machineYearLte !== null ||
-    locationIcFilter
-      ? true
-      : false;
+  // Derived from the same fragment logic that builds the human-readable
+  // summary, so a filter that can't be described (e.g. a deep-linked
+  // opdb_id that doesn't resolve to any known machine) isn't treated as
+  // "applied" either - there's nothing valid being filtered on.
+  const filterApplied = filterSummary !== null;
 
   useEffect(() => {
     themeRef.current = theme.theme;
@@ -522,20 +501,49 @@ const Map = ({
         )}
       </Pressable>
       {filterApplied ? (
-        <Pressable
-          onPress={() => dispatch(clearFilters(true))}
-          style={({ pressed }) => [
-            s.buttonStyle,
-            s.shadow,
-            { top: topMargin + 60 },
-            s.filterContainer,
-            pressed ? s.filterListPressed : undefined,
-          ]}
-        >
-          <Ionicons name="close-circle" style={s.closeIcon} />
-          <Text style={s.filterTitleStyle}>Filter</Text>
-        </Pressable>
+        <View style={[{ top: topMargin + 60 }, s.filterRow]}>
+          <Pressable
+            onPress={() => setFilterInfoVisible(true)}
+            hitSlop={8}
+            style={({ pressed }) => [
+              s.infoButton,
+              pressed ? s.pressed : s.notPressed,
+            ]}
+          >
+            <MaterialCommunityIcons
+              name="information-slab-circle"
+              style={s.infoIcon}
+            />
+          </Pressable>
+          <Pressable
+            onPress={() => dispatch(clearFilters(true))}
+            style={({ pressed }) => [
+              s.buttonStyle,
+              s.shadow,
+              pressed ? s.filterListPressed : undefined,
+            ]}
+          >
+            <Ionicons name="close-circle" style={s.closeIcon} />
+            <Text style={s.filterTitleStyle}>Filter</Text>
+          </Pressable>
+        </View>
       ) : null}
+      <ConfirmationModal
+        visible={filterInfoVisible}
+        closeModal={() => setFilterInfoVisible(false)}
+      >
+        <View>
+          <Text style={s.filterSummaryText}>
+            Showing locations with {filterSummary}.
+          </Text>
+          <MaterialCommunityIcons
+            name="close-circle"
+            size={35}
+            onPress={() => setFilterInfoVisible(false)}
+            style={s.xButton}
+          />
+        </View>
+      </ConfirmationModal>
       {!isFetchingMarkers && !isFirstLoad && numLocations > 0 && (
         <View style={s.statsContainer}>
           <Text style={s.statsText}>
@@ -677,11 +685,22 @@ const getStyles = (theme) =>
       width: 54,
       backgroundColor: theme.theme == "dark" ? theme.pink2 : theme.base1,
     },
-    filterContainer: {
+    filterRow: {
       position: "absolute",
       alignSelf: "center",
       right: 15,
-      borderRadius: 25,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    infoButton: {
+      height: 40,
+      width: 32,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    infoIcon: {
+      fontSize: 24,
+      color: theme.theme == "dark" ? "#ffa7dd" : theme.pink1,
     },
     filterTitleStyle: {
       color: theme.theme == "dark" ? "#ffa7dd" : theme.pink1,
@@ -719,11 +738,34 @@ const getStyles = (theme) =>
       fontFamily: "Nunito-Regular",
       color: theme.text,
     },
+    filterSummaryText: {
+      textAlign: "center",
+      fontSize: 16,
+      fontFamily: "Nunito-Regular",
+      paddingHorizontal: 35,
+    },
+    xButton: {
+      position: "absolute",
+      right: 3,
+      top: -10,
+      color: theme.theme == "dark" ? theme.base4 : theme.base1,
+      shadowColor:
+        theme.theme == "dark" ? "rgb(0, 0, 0)" : "rgb(126, 126, 145)",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.5,
+      shadowRadius: 3.84,
+      elevation: 5,
+      overflow: "visible",
+    },
   });
 
 const mapStateToProps = (state) => {
   const { locations, query, regions, user, machines, operators } = state;
   const selectedLocation = getSelectedMapLocation(state);
+  const filterSummary = getFilterSummaryText(state);
   const numLocations = locations.mapMarkers.length;
   const numMachines = locations.mapMarkers.reduce(
     (sum, f) => sum + (f.properties?.machine_count ?? 0),
@@ -736,6 +778,7 @@ const mapStateToProps = (state) => {
     regions,
     isFetchingMarkers: locations.isFetchingMarkers,
     selectedLocation,
+    filterSummary,
     numLocations,
     totalMachines: numMachines,
     isLocationServicesEnabled,
