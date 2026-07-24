@@ -17,6 +17,7 @@ import {
   SET_MACHINE_TYPE_FILTER,
   SET_MACHINE_YEAR_FILTER,
   SET_LOCATION_IC_FILTER,
+  SET_OPDB_ID_FILTER,
   SET_ACTIVITY_MACHINE_FILTER,
   SET_ACTIVITY_BTN_IDX,
 } from "./types";
@@ -46,6 +47,9 @@ export const setLocationIcFilter = (value) => (dispatch) => {
 };
 export const setIcFilter = (value) => (dispatch) => {
   dispatch({ type: SET_IC_FILTER, icFilter: value });
+};
+export const setOpdbIdFilter = (opdbIds) => (dispatch) => {
+  dispatch({ type: SET_OPDB_ID_FILTER, opdbIds });
 };
 export const setMachineVersionFilter = (machine_group_id) => (dispatch) => {
   dispatch({

@@ -29,6 +29,17 @@ import {
   getMapMarkers,
   triggerUpdateBounds,
   setSelectedMapLocation,
+  reloadMapMarkers,
+  setMachineFilter,
+  setMachineFilterMulti,
+  setOpdbIdFilter,
+  selectedLocationTypeFilterMulti,
+  selectedOperatorFilter,
+  selectedManufacturerFilter,
+  setMachineTypeFilter,
+  setMachineYearFilter,
+  setLocationIcFilter,
+  updateNumMachinesSelected,
 } from "../actions";
 import { getSelectedMapLocation } from "../selectors";
 import {
@@ -37,6 +48,7 @@ import {
 } from "react-native-safe-area-context";
 import { coordsToBounds } from "../utils/utilityFunctions";
 import { registerGetBounds } from "../utils/mapCenterBridge";
+import { parseFilterParamsFromUrl } from "../utils/deepLinkFilters";
 import { useNavigation, useTheme } from "@react-navigation/native";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_PUBLIC);
@@ -50,6 +62,9 @@ const Map = ({
   isLocationServicesEnabled,
   locationTrackingServicesEnabled,
   regions,
+  machines,
+  locationTypes,
+  operators,
 }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -163,8 +178,90 @@ const Map = ({
     registerGetBounds(getBounds);
   }, []);
 
+  // URL filter params replace whatever filter state happens to already be
+  // active - a link tap is a fresh intent, not a merge with prior browsing.
+  const applyFiltersFromUrl = (parsedFilters) => {
+    dispatch(clearFilters(false));
+
+    const resolvedMachines = parsedFilters.machineIds
+      .map((id) => machines.find((m) => m.id === Number(id)))
+      .filter(Boolean);
+
+    const opdbIds = parsedFilters.opdbIds;
+    const resolvedOpdbMachines = opdbIds
+      .map((id) => machines.find((m) => m.opdb_id === id))
+      .filter(Boolean);
+    const allOpdbIdsResolved =
+      opdbIds.length > 0 && resolvedOpdbMachines.length === opdbIds.length;
+
+    if (resolvedMachines.length === 1) {
+      dispatch(setMachineFilter(resolvedMachines[0]));
+    } else if (resolvedMachines.length > 1) {
+      dispatch(setMachineFilterMulti(resolvedMachines));
+    } else if (allOpdbIdsResolved) {
+      if (resolvedOpdbMachines.length === 1) {
+        dispatch(setMachineFilter(resolvedOpdbMachines[0]));
+      } else {
+        dispatch(setMachineFilterMulti(resolvedOpdbMachines));
+      }
+    } else if (opdbIds.length > 0) {
+      dispatch(setOpdbIdFilter(opdbIds));
+    }
+
+    const validLocationTypeIds = parsedFilters.locationTypeIds
+      .map(Number)
+      .filter((id) => locationTypes.some((t) => t.id === id));
+    if (validLocationTypeIds.length > 0) {
+      dispatch(selectedLocationTypeFilterMulti(validLocationTypeIds));
+    }
+
+    const operatorId = Number(parsedFilters.operatorId);
+    if (
+      parsedFilters.operatorId &&
+      operators.some((o) => o.id === operatorId)
+    ) {
+      dispatch(selectedOperatorFilter(operatorId));
+    }
+
+    const knownManufacturers = new Set(
+      machines.map((m) => m.manufacturer).filter(Boolean),
+    );
+    const validManufacturers = parsedFilters.manufacturers.filter((m) =>
+      knownManufacturers.has(m),
+    );
+    if (validManufacturers.length > 0) {
+      dispatch(selectedManufacturerFilter(validManufacturers));
+    }
+    if (parsedFilters.machineTypeEm) {
+      dispatch(setMachineTypeFilter("em"));
+    }
+    if (
+      parsedFilters.machineYearGte !== null ||
+      parsedFilters.machineYearLte !== null
+    ) {
+      dispatch(
+        setMachineYearFilter(
+          parsedFilters.machineYearGte,
+          parsedFilters.machineYearLte,
+        ),
+      );
+    }
+    if (parsedFilters.locationIcActive) {
+      dispatch(setLocationIcFilter(true));
+    }
+    if (parsedFilters.numMachines !== null) {
+      dispatch(updateNumMachinesSelected(parsedFilters.numMachines));
+    }
+
+    dispatch(reloadMapMarkers());
+  };
+
   const navigateToScreen = async (url) => {
     const { regions: allRegions = [] } = regions ?? {};
+    const parsedFilters = parseFilterParamsFromUrl(url);
+    if (parsedFilters) {
+      applyFiltersFromUrl(parsedFilters);
+    }
     if (url.indexOf("location_id=") > 0) {
       const idSegment = url.split("location_id=")[1];
       const id = idSegment.split("&")[0];
@@ -625,7 +722,7 @@ const getStyles = (theme) =>
   });
 
 const mapStateToProps = (state) => {
-  const { locations, query, regions, user } = state;
+  const { locations, query, regions, user, machines, operators } = state;
   const selectedLocation = getSelectedMapLocation(state);
   const numLocations = locations.mapMarkers.length;
   const numMachines = locations.mapMarkers.reduce(
@@ -643,6 +740,9 @@ const mapStateToProps = (state) => {
     totalMachines: numMachines,
     isLocationServicesEnabled,
     locationTrackingServicesEnabled,
+    machines: machines.machines,
+    locationTypes: locations.locationTypes,
+    operators: operators.operators,
   };
 };
 

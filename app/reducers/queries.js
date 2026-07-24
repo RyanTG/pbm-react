@@ -17,6 +17,7 @@ import {
   SET_MACHINE_TYPE_FILTER,
   SET_MACHINE_YEAR_FILTER,
   SET_LOCATION_IC_FILTER,
+  SET_OPDB_ID_FILTER,
   CLEAR_SEARCH_BAR_TEXT,
   SET_SEARCH_BAR_TEXT,
   SET_ACTIVITY_MACHINE_FILTER,
@@ -50,6 +51,7 @@ export const initialState = {
   machineYearGte: null,
   machineYearLte: null,
   locationIcFilter: false,
+  opdbIdFilter: [],
   searchBarText: "",
   triggerUpdateBounds: false,
 };
@@ -88,12 +90,14 @@ export default (state = initialState, action) => {
           ...state,
           machineId: "",
           machine: {},
+          machines: [],
         };
       } else {
         return {
           ...state,
           machineId: action.machine.id,
           machine: action.machine,
+          machines: [action.machine],
           machineGroupId: action.machine.machine_group_id,
         };
       }
@@ -148,6 +152,7 @@ export default (state = initialState, action) => {
         machineYearGte: null,
         machineYearLte: null,
         locationIcFilter: false,
+        opdbIdFilter: [],
       };
     case SET_IC_FILTER:
       return {
@@ -247,6 +252,11 @@ export default (state = initialState, action) => {
       return {
         ...state,
         locationIcFilter: action.locationIcFilter,
+      };
+    case SET_OPDB_ID_FILTER:
+      return {
+        ...state,
+        opdbIdFilter: action.opdbIds,
       };
     case SET_SEARCH_BAR_TEXT:
       return {
