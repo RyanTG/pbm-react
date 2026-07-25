@@ -145,6 +145,8 @@ export const Saved = ({
                           : undefined
                       }
                       userId={userId}
+                      allAges={item.location.all_ages}
+                      paymentType={item.location.payment_type}
                     />
                   )}
                 />

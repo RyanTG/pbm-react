@@ -18,6 +18,8 @@ import {
   SET_MACHINE_YEAR_FILTER,
   SET_LOCATION_IC_FILTER,
   SET_OPDB_ID_FILTER,
+  SET_ALL_AGES_FILTER,
+  SET_PAYMENT_TYPE_FILTER,
   CLEAR_SEARCH_BAR_TEXT,
   SET_SEARCH_BAR_TEXT,
   SET_ACTIVITY_MACHINE_FILTER,
@@ -52,6 +54,8 @@ export const initialState = {
   machineYearLte: null,
   locationIcFilter: false,
   opdbIdFilter: [],
+  allAgesFilter: false,
+  paymentTypeFilter: false,
   searchBarText: "",
   triggerUpdateBounds: false,
 };
@@ -153,6 +157,8 @@ export default (state = initialState, action) => {
         machineYearLte: null,
         locationIcFilter: false,
         opdbIdFilter: [],
+        allAgesFilter: false,
+        paymentTypeFilter: false,
       };
     case SET_IC_FILTER:
       return {
@@ -252,6 +258,16 @@ export default (state = initialState, action) => {
       return {
         ...state,
         locationIcFilter: action.locationIcFilter,
+      };
+    case SET_ALL_AGES_FILTER:
+      return {
+        ...state,
+        allAgesFilter: action.allAgesFilter,
+      };
+    case SET_PAYMENT_TYPE_FILTER:
+      return {
+        ...state,
+        paymentTypeFilter: action.paymentTypeFilter,
       };
     case SET_OPDB_ID_FILTER:
       return {

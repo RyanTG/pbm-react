@@ -191,6 +191,8 @@ const LocationList = ({
                   : undefined
               }
               userId={userId}
+              allAges={item.all_ages}
+              paymentType={item.payment_type}
             />
           )}
           keyExtractor={(item) => `list-item-${item.id}`}

@@ -185,8 +185,15 @@ export default (state = initialState, action) => {
         updatingLocationDetails: true,
       };
     case LOCATION_DETAILS_UPDATED: {
-      const { phone, website, description, operator_id, location_type_id } =
-        action.data.location;
+      const {
+        phone,
+        website,
+        description,
+        operator_id,
+        location_type_id,
+        all_ages,
+        payment_type,
+      } = action.data.location;
       return {
         ...state,
         updatingLocationDetails: false,
@@ -199,6 +206,8 @@ export default (state = initialState, action) => {
           description,
           operator_id,
           location_type_id,
+          all_ages,
+          payment_type,
         },
       };
     }

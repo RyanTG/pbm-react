@@ -928,11 +928,17 @@ const LocationDetails = (props) => {
               {location.street}, {cityState} {location.zip}
             </Text>
 
-            {location.location_type_id || locationTrackingServicesEnabled ? (
+            {location.location_type_id ||
+            locationTrackingServicesEnabled ||
+            location.all_ages ||
+            location.payment_type ? (
               <View
                 style={[
                   {
                     justifyContent: "space-around",
+                    flexWrap: "wrap",
+                    rowGap: 8,
+                    columnGap: 12,
                     marginTop: 10,
                     marginBottom: 10,
                   },
@@ -971,9 +977,7 @@ const LocationDetails = (props) => {
                     <CustomIcon
                       name={locationIcon}
                       size={24}
-                      color={
-                        theme.theme == "dark" ? theme.purpleLight : theme.pink3
-                      }
+                      color={theme.theme == "dark" ? theme.pink1 : theme.pink3}
                       type={iconLibrary}
                     />
                     <Text
@@ -987,6 +991,51 @@ const LocationDetails = (props) => {
                       ]}
                     >
                       {locationTypeName}
+                    </Text>
+                  </View>
+                )}
+
+                {location.all_ages && (
+                  <View style={[s.row]}>
+                    <MaterialCommunityIcons
+                      name="human-male-child"
+                      style={s.distanceIcon}
+                    />
+                    <Text
+                      style={[
+                        {
+                          marginLeft: 5,
+                          fontSize: 15,
+                          color: theme.text2,
+                        },
+                        s.bold,
+                      ]}
+                    >
+                      {location.all_ages === "Yes"
+                        ? "All Ages"
+                        : "All Ages At Times"}
+                    </Text>
+                  </View>
+                )}
+
+                {location.payment_type && (
+                  <View style={[s.row]}>
+                    <FontAwesome6
+                      name="coins"
+                      iconStyle="solid"
+                      style={s.distanceIcon}
+                    />
+                    <Text
+                      style={[
+                        {
+                          marginLeft: 5,
+                          fontSize: 15,
+                          color: theme.text2,
+                        },
+                        s.bold,
+                      ]}
+                    >
+                      {location.payment_type}
                     </Text>
                   </View>
                 )}
@@ -1617,59 +1666,59 @@ const LocationDetails = (props) => {
           onPress={() => setRandomMachineModalVisible(false)}
         />
       </ConfirmationModal>
-      <Modal
+      <ConfirmationModal
         visible={sortModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSortModalVisible(false)}
+        closeModal={() => setSortModalVisible(false)}
       >
-        <Pressable
-          style={s.sortModalOverlay}
-          onPress={() => setSortModalVisible(false)}
-        >
-          <View style={[s.sortModalWrapper, s.boxShadow]}>
-            <View style={s.sortModalContent}>
-              {sortOptions.map((option) => {
-                const isSelected = option.key === sortOrder;
-                return (
-                  <Pressable
-                    key={option.key}
-                    onPress={() => {
-                      setSortOrder(option.key);
-                      setSortModalVisible(false);
-                      if (rememberMachineSortPreference) {
-                        dispatch(setLastMachineSortOrder(option.key));
-                      }
-                    }}
-                    style={({ pressed }) => [
-                      s.sortModalItem,
-                      isSelected && s.sortModalItemSelected,
-                      pressed && s.yearButtonPressed,
-                    ]}
-                  >
-                    <Text
-                      maxFontSizeMultiplier={1.3}
-                      style={[
-                        s.sortModalItemText,
-                        isSelected && s.sortModalItemTextSelected,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                    {isSelected && (
-                      <MaterialCommunityIcons
-                        name="check"
-                        size={18}
-                        color={theme.text2}
-                      />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
+        <View style={s.sortModalHeader}>
+          <Text style={s.sortModalHeaderTitle}>Change Sort Order</Text>
+          <MaterialCommunityIcons
+            name="close-circle"
+            size={35}
+            onPress={() => setSortModalVisible(false)}
+            style={s.sortModalXButton}
+          />
+        </View>
+        <View style={s.sortModalContent}>
+          {sortOptions.map((option) => {
+            const isSelected = option.key === sortOrder;
+            return (
+              <Pressable
+                key={option.key}
+                onPress={() => {
+                  setSortOrder(option.key);
+                  setSortModalVisible(false);
+                  if (rememberMachineSortPreference) {
+                    dispatch(setLastMachineSortOrder(option.key));
+                  }
+                }}
+                style={({ pressed }) => [
+                  s.sortModalItem,
+                  isSelected && s.sortModalItemSelected,
+                  pressed && s.yearButtonPressed,
+                ]}
+              >
+                <Text
+                  maxFontSizeMultiplier={1.3}
+                  style={[
+                    s.sortModalItemText,
+                    isSelected && s.sortModalItemTextSelected,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+                {isSelected && (
+                  <MaterialCommunityIcons
+                    name="check"
+                    size={18}
+                    color={theme.text2}
+                  />
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      </ConfirmationModal>
       {showScrollToTop && (
         <Pressable onPress={scrollToTop} style={[s.upButton, s.boxShadow]}>
           <FontAwesome6
@@ -1867,7 +1916,7 @@ const getStyles = (theme) =>
     },
     distanceIcon: {
       fontSize: 22,
-      color: theme.theme == "dark" ? theme.purpleLight : theme.pink3,
+      color: theme.theme == "dark" ? theme.pink1 : theme.pink3,
     },
     nameItem: {
       flex: 1,
@@ -1901,21 +1950,37 @@ const getStyles = (theme) =>
     sortIcon: {
       padding: 4,
     },
-    sortModalOverlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.4)",
+    sortModalHeader: {
+      backgroundColor: theme.theme == "dark" ? theme.white : theme.base4,
+      borderTopLeftRadius: 15,
+      borderTopRightRadius: 15,
+      marginTop: -25,
+      paddingVertical: 8,
       justifyContent: "center",
-      alignItems: "center",
     },
-    sortModalWrapper: {
-      width: "75%",
-      maxWidth: 320,
-      borderRadius: 12,
-      backgroundColor: theme.white,
+    sortModalHeaderTitle: {
+      color: theme.purple2,
+      textAlign: "center",
+      fontSize: 18,
+      fontFamily: "Nunito-ExtraBold",
+    },
+    sortModalXButton: {
+      position: "absolute",
+      right: 3,
+      color: theme.theme == "dark" ? theme.base4 : theme.base1,
+      shadowColor:
+        theme.theme == "dark" ? "rgb(0, 0, 0)" : "rgb(126, 126, 145)",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.5,
+      shadowRadius: 3.84,
+      elevation: 5,
+      overflow: "visible",
     },
     sortModalContent: {
-      borderRadius: 12,
-      overflow: "hidden",
+      marginTop: 10,
     },
     sortModalItem: {
       height: 48,

@@ -18,6 +18,8 @@ import {
   SET_MACHINE_YEAR_FILTER,
   SET_LOCATION_IC_FILTER,
   SET_OPDB_ID_FILTER,
+  SET_ALL_AGES_FILTER,
+  SET_PAYMENT_TYPE_FILTER,
   SET_ACTIVITY_MACHINE_FILTER,
   SET_ACTIVITY_BTN_IDX,
 } from "./types";
@@ -44,6 +46,12 @@ export const setMachineYearFilter = (gte, lte) => (dispatch) => {
 };
 export const setLocationIcFilter = (value) => (dispatch) => {
   dispatch({ type: SET_LOCATION_IC_FILTER, locationIcFilter: value });
+};
+export const setAllAgesFilter = (value) => (dispatch) => {
+  dispatch({ type: SET_ALL_AGES_FILTER, allAgesFilter: value });
+};
+export const setPaymentTypeFilter = (value) => (dispatch) => {
+  dispatch({ type: SET_PAYMENT_TYPE_FILTER, paymentTypeFilter: value });
 };
 export const setIcFilter = (value) => (dispatch) => {
   dispatch({ type: SET_IC_FILTER, icFilter: value });

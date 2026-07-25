@@ -41,6 +41,8 @@ import {
   setMachineYearFilter,
   setLocationIcFilter,
   updateNumMachinesSelected,
+  setAllAgesFilter,
+  setPaymentTypeFilter,
 } from "../actions";
 import { getSelectedMapLocation, getFilterSummaryText } from "../selectors";
 import {
@@ -230,6 +232,12 @@ const Map = ({
     }
     if (parsedFilters.numMachines !== null) {
       dispatch(updateNumMachinesSelected(parsedFilters.numMachines));
+    }
+    if (parsedFilters.allAgesActive) {
+      dispatch(setAllAgesFilter(true));
+    }
+    if (parsedFilters.paymentTypeActive) {
+      dispatch(setPaymentTypeFilter(true));
     }
 
     dispatch(reloadMapMarkers());

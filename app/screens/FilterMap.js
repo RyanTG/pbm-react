@@ -17,6 +17,8 @@ import {
   setMachineTypeFilter,
   setMachineYearFilter,
   setLocationIcFilter,
+  setAllAgesFilter,
+  setPaymentTypeFilter,
   reloadMapMarkers,
   clearSelectedState,
   addMachineToList,
@@ -59,6 +61,8 @@ const FilterMap = ({
     machineYearGte = null,
     machineYearLte = null,
     locationIcFilter = false,
+    allAgesFilter = false,
+    paymentTypeFilter = false,
   } = query;
   const { navigate } = navigation;
 
@@ -412,6 +416,32 @@ const FilterMap = ({
               onPress={setNumMachinesSelected}
               selectedIndex={getIdx(numMachines)}
               buttons={["All", "2+", "5+", "10+", "20+"]}
+              containerStyle={[s.buttonGroupContainer, s.boxShadow]}
+              textStyle={s.buttonGroupInactive}
+              selectedButtonStyle={s.selButtonStyle}
+              selectedTextStyle={s.selTextStyle}
+              innerBorderStyle={s.innerBorderStyle}
+            />
+            <Text style={[s.filterTitle, s.marginTop20, s.paddingRL10]}>
+              All Ages?
+            </Text>
+            <ButtonGroup
+              onPress={(idx) => dispatch(setAllAgesFilter(idx === 1))}
+              selectedIndex={allAgesFilter ? 1 : 0}
+              buttons={["All", "All Ages"]}
+              containerStyle={[s.buttonGroupContainer, s.boxShadow]}
+              textStyle={s.buttonGroupInactive}
+              selectedButtonStyle={s.selButtonStyle}
+              selectedTextStyle={s.selTextStyle}
+              innerBorderStyle={s.innerBorderStyle}
+            />
+            <Text style={[s.filterTitle, s.marginTop20, s.paddingRL10]}>
+              Free Play?
+            </Text>
+            <ButtonGroup
+              onPress={(idx) => dispatch(setPaymentTypeFilter(idx === 1))}
+              selectedIndex={paymentTypeFilter ? 1 : 0}
+              buttons={["Any", "Free Play"]}
               containerStyle={[s.buttonGroupContainer, s.boxShadow]}
               textStyle={s.buttonGroupInactive}
               selectedButtonStyle={s.selButtonStyle}

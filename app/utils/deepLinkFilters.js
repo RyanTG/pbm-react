@@ -49,6 +49,8 @@ export const parseFilterParamsFromUrl = (url) => {
   const numMachines = params.has("by_at_least_n_machines_type")
     ? Number(params.get("by_at_least_n_machines_type"))
     : null;
+  const allAgesActive = params.getAll("by_all_ages[]").length > 0;
+  const paymentTypeActive = params.has("by_payment_type");
 
   const hasFilters =
     machineIds.length > 0 ||
@@ -60,7 +62,9 @@ export const parseFilterParamsFromUrl = (url) => {
     machineYearGte !== null ||
     machineYearLte !== null ||
     locationIcActive ||
-    numMachines !== null;
+    numMachines !== null ||
+    allAgesActive ||
+    paymentTypeActive;
 
   if (!hasFilters) return null;
 
@@ -75,5 +79,7 @@ export const parseFilterParamsFromUrl = (url) => {
     machineYearLte,
     locationIcActive,
     numMachines,
+    allAgesActive,
+    paymentTypeActive,
   };
 };

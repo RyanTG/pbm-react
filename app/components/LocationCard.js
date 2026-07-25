@@ -11,6 +11,7 @@ import {
 import { ThemeContext } from "../theme-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
+import FontAwesome6 from "@react-native-vector-icons/fontawesome6/static";
 import FavoriteLocation from "./FavoriteLocation";
 import { CustomIcon } from "../components";
 
@@ -31,12 +32,20 @@ const LocationCard = ({
   saved = false,
   notInListCount,
   userId,
+  allAges,
+  paymentType,
 }) => {
   const { theme } = useContext(ThemeContext);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const s = getStyles(theme);
   const { name: type, icon, library } = locationType;
   const cityState = state ? `${city}, ${state}` : city;
+  const allAgesLabel =
+    allAges === "Yes"
+      ? "All Ages"
+      : allAges === "At Times"
+        ? "All Ages At Times"
+        : null;
   const removeFavorite = (cb) => {
     saved
       ? Animated.timing(fadeAnim, {
@@ -117,7 +126,11 @@ const LocationCard = ({
                 ) : null}
               </View>
             </View>
-            {type || distance || notInListCount ? (
+            {type ||
+            distance ||
+            notInListCount ||
+            allAgesLabel ||
+            paymentType ? (
               <View style={s.locationTypeContainer}>
                 {distance ? (
                   <View style={s.vertAlign}>
@@ -152,6 +165,43 @@ const LocationCard = ({
                     >
                       {" "}
                       {type}
+                    </Text>
+                  </View>
+                ) : null}
+                {allAgesLabel ? (
+                  <View style={s.vertAlign}>
+                    <MaterialCommunityIcons
+                      name="human-male-child"
+                      style={s.icon}
+                    />
+                    <Text
+                      style={{
+                        marginRight: 15,
+                        color: theme.text2,
+                        fontFamily: "Nunito-SemiBold",
+                      }}
+                    >
+                      {" "}
+                      {allAgesLabel}
+                    </Text>
+                  </View>
+                ) : null}
+                {paymentType ? (
+                  <View style={s.vertAlign}>
+                    <FontAwesome6
+                      name="coins"
+                      iconStyle="solid"
+                      style={s.icon}
+                    />
+                    <Text
+                      style={{
+                        marginRight: 15,
+                        color: theme.text2,
+                        fontFamily: "Nunito-SemiBold",
+                      }}
+                    >
+                      {" "}
+                      {paymentType}
                     </Text>
                   </View>
                 ) : null}
@@ -307,7 +357,7 @@ const getStyles = (theme) =>
     },
     icon: {
       fontSize: 28,
-      color: theme.theme == "dark" ? theme.pink1 : theme.pink3,
+      color: theme.theme == "dark" ? theme.purpleLight : theme.pink3,
       marginRight: 1,
     },
     lifeListLink: {
@@ -333,6 +383,8 @@ LocationCard.propTypes = {
   removeFavoriteLocation: PropTypes.func,
   notInListCount: PropTypes.number,
   userId: PropTypes.number,
+  allAges: PropTypes.string,
+  paymentType: PropTypes.string,
 };
 
 export default LocationCard;

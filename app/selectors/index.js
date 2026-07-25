@@ -50,7 +50,9 @@ export const filterSelected = createSelector(queryState, (query) =>
   query.machineTypeFilter !== "" ||
   query.machineYearGte !== null ||
   query.machineYearLte !== null ||
-  query.locationIcFilter
+  query.locationIcFilter ||
+  query.allAgesFilter ||
+  query.paymentTypeFilter
     ? true
     : false,
 );

@@ -37,6 +37,7 @@ import {
   ActivityIndicator,
   BackglassImage,
   ButtonGroup,
+  ConfirmationModal,
   PbmButton,
   Text,
   Toast,
@@ -633,56 +634,56 @@ const FindMachine = ({
           </View>
         </View>
       </Modal>
-      <Modal
+      <ConfirmationModal
         visible={sortModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSortModalVisible(false)}
+        closeModal={() => setSortModalVisible(false)}
       >
-        <Pressable
-          style={s.sortModalOverlay}
-          onPress={() => setSortModalVisible(false)}
-        >
-          <View style={[s.sortModalWrapper, s.boxShadow]}>
-            <View style={s.sortModalContent}>
-              {sortOptions.map((option) => {
-                const isSelected = option.key === sortOrder;
-                return (
-                  <Pressable
-                    key={option.key}
-                    onPress={() => {
-                      setSortOrder(option.key);
-                      setSortModalVisible(false);
-                    }}
-                    style={({ pressed }) => [
-                      s.sortModalItem,
-                      isSelected && s.sortModalItemSelected,
-                      pressed && s.sortModalItemPressed,
-                    ]}
-                  >
-                    <Text
-                      maxFontSizeMultiplier={1.3}
-                      style={[
-                        s.sortModalItemText,
-                        isSelected && s.sortModalItemTextSelected,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                    {isSelected && (
-                      <MaterialCommunityIcons
-                        name="check"
-                        size={18}
-                        color={theme.text2}
-                      />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
+        <View style={s.sortModalHeader}>
+          <Text style={s.sortModalHeaderTitle}>Change Sort Order</Text>
+          <MaterialCommunityIcons
+            name="close-circle"
+            size={35}
+            onPress={() => setSortModalVisible(false)}
+            style={s.sortModalXButton}
+          />
+        </View>
+        <View style={s.sortModalContent}>
+          {sortOptions.map((option) => {
+            const isSelected = option.key === sortOrder;
+            return (
+              <Pressable
+                key={option.key}
+                onPress={() => {
+                  setSortOrder(option.key);
+                  setSortModalVisible(false);
+                }}
+                style={({ pressed }) => [
+                  s.sortModalItem,
+                  isSelected && s.sortModalItemSelected,
+                  pressed && s.sortModalItemPressed,
+                ]}
+              >
+                <Text
+                  maxFontSizeMultiplier={1.3}
+                  style={[
+                    s.sortModalItemText,
+                    isSelected && s.sortModalItemTextSelected,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+                {isSelected && (
+                  <MaterialCommunityIcons
+                    name="check"
+                    size={18}
+                    color={theme.text2}
+                  />
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      </ConfirmationModal>
       <View
         style={{
           display: "flex",
@@ -881,21 +882,37 @@ const getStyles = (theme) =>
       elevation: 5,
       overflow: "visible",
     },
-    sortModalOverlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.4)",
+    sortModalHeader: {
+      backgroundColor: theme.theme == "dark" ? theme.white : theme.base4,
+      borderTopLeftRadius: 15,
+      borderTopRightRadius: 15,
+      marginTop: -25,
+      paddingVertical: 8,
       justifyContent: "center",
-      alignItems: "center",
     },
-    sortModalWrapper: {
-      width: "75%",
-      maxWidth: 320,
-      borderRadius: 12,
-      backgroundColor: theme.white,
+    sortModalHeaderTitle: {
+      color: theme.purple2,
+      textAlign: "center",
+      fontSize: 18,
+      fontFamily: "Nunito-ExtraBold",
+    },
+    sortModalXButton: {
+      position: "absolute",
+      right: 3,
+      color: theme.theme == "dark" ? theme.base4 : theme.base1,
+      shadowColor:
+        theme.theme == "dark" ? "rgb(0, 0, 0)" : "rgb(126, 126, 145)",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.5,
+      shadowRadius: 3.84,
+      elevation: 5,
+      overflow: "visible",
     },
     sortModalContent: {
-      borderRadius: 12,
-      overflow: "hidden",
+      marginTop: 10,
     },
     sortModalItem: {
       height: 48,

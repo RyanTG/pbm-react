@@ -18,6 +18,7 @@ import {
 import {
   ActivityIndicator,
   DropDownButton,
+  OptionPickerButton,
   PbmButton,
   Text,
   WarningButton,
@@ -37,7 +38,14 @@ function EditLocationDetails({ navigation, ...props }) {
   const dispatch = useDispatch();
   const confirmEditLocationDetails = () => {
     dispatch(
-      updateLocationDetails(navigation.goBack, phone, website, description),
+      updateLocationDetails(
+        navigation.goBack,
+        phone,
+        website,
+        description,
+        allAges,
+        paymentType,
+      ),
     );
   };
 
@@ -45,6 +53,12 @@ function EditLocationDetails({ navigation, ...props }) {
   const [website, setWebsite] = useState(props.location.location.website);
   const [description, setDescription] = useState(
     props.location.location.description,
+  );
+  const [allAges, setAllAges] = useState(
+    props.location.location.all_ages || null,
+  );
+  const [paymentType, setPaymentType] = useState(
+    props.location.location.payment_type || null,
   );
 
   const { locationType, operator, location } = props.location;
@@ -141,6 +155,14 @@ function EditLocationDetails({ navigation, ...props }) {
                 <Text style={s.preview}>{description}</Text>
               </View>
               <View style={s.previewContainer}>
+                <Text style={s.previewTitle}>All Ages</Text>
+                <Text style={s.preview}>{allAges || "None Selected"}</Text>
+              </View>
+              <View style={s.previewContainer}>
+                <Text style={s.previewTitle}>Free Play</Text>
+                <Text style={s.preview}>{paymentType || "None Selected"}</Text>
+              </View>
+              <View style={s.previewContainer}>
                 <Text style={s.previewTitle}>Location Type</Text>
                 <Text style={s.preview}>
                   {typeof locationTypeId === "number" && locationTypeId > -1
@@ -230,6 +252,22 @@ function EditLocationDetails({ navigation, ...props }) {
               }
               placeholderTextColor={theme.indigo4}
               textAlignVertical="top"
+            />
+            <Text style={s.title}>All Ages?</Text>
+            <OptionPickerButton
+              title="All Ages?"
+              description="Leave blank ('None Selected') if you're not sure, or if this location isn't all ages."
+              options={["Yes", "At Times"]}
+              selectedValue={allAges}
+              onSelect={setAllAges}
+            />
+            <Text style={s.title}>Free Play?</Text>
+            <OptionPickerButton
+              title="Free Play?"
+              description="Leave blank ('None Selected') if you're not sure, or if this isn't a free play location. If some times or some games are not free play, Free Play may still be the best choice (location description should contain details)."
+              options={["Free Play"]}
+              selectedValue={paymentType}
+              onSelect={setPaymentType}
             />
             <Text style={s.title}>Location Type</Text>
             <DropDownButton

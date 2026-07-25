@@ -48,6 +48,8 @@ const buildFilterQueryString = (query, userId) => {
     machineYearLte = null,
     locationIcFilter = false,
     opdbIdFilter = [],
+    allAgesFilter = false,
+    paymentTypeFilter = false,
     locationType,
     locationTypeIds = [],
     numMachines,
@@ -56,7 +58,8 @@ const buildFilterQueryString = (query, userId) => {
   } = query;
   const machineQueryString =
     machineIds.length > 1
-      ? machineIds.map((id) => `by_machine_single_id[]=${id}`).join("&") + "&"
+      ? machineIds.map((id) => `by_machine_single_id%5B%5D=${id}`).join("&") +
+        "&"
       : machineGroupId
         ? `by_machine_group_id=${machineGroupId}&`
         : machineIds.length === 1
@@ -66,7 +69,7 @@ const buildFilterQueryString = (query, userId) => {
             : "";
   const locationTypeQueryString =
     locationTypeIds.length > 1
-      ? locationTypeIds.map((id) => `by_type_id[]=${id}`).join("&") + "&"
+      ? locationTypeIds.map((id) => `by_type_id%5B%5D=${id}`).join("&") + "&"
       : locationTypeIds.length === 1
         ? `by_type_id=${locationTypeIds[0]}&`
         : locationType
@@ -83,18 +86,24 @@ const buildFilterQueryString = (query, userId) => {
       ? manufacturerFilter.length === 1
         ? `manufacturer=${encodeURIComponent(manufacturerFilter[0])}&`
         : manufacturerFilter
-            .map((m) => `manufacturer[]=${encodeURIComponent(m)}`)
+            .map((m) => `manufacturer%5B%5D=${encodeURIComponent(m)}`)
             .join("&") + "&"
       : "";
   const machineTypeQueryString =
     machineTypeFilter === "em"
-      ? "by_machine_type[]=em&by_machine_type[]=me&"
+      ? "by_machine_type%5B%5D=em&by_machine_type%5B%5D=me&"
       : "";
   const machineYearQueryString = [
     machineYearGte ? `by_machine_year_gte=${machineYearGte}&` : "",
     machineYearLte ? `by_machine_year_lte=${machineYearLte}&` : "",
   ].join("");
   const locationIcQueryString = locationIcFilter ? "by_ic_active=true&" : "";
+  const allAgesQueryString = allAgesFilter
+    ? `by_all_ages%5B%5D=${encodeURIComponent("Yes")}&by_all_ages%5B%5D=${encodeURIComponent("At Times")}&`
+    : "";
+  const paymentTypeQueryString = paymentTypeFilter
+    ? `by_payment_type=${encodeURIComponent("Free Play")}&`
+    : "";
   const numMachinesQueryString = numMachines
     ? `by_at_least_n_machines_type=${numMachines}&`
     : "";
@@ -108,10 +117,10 @@ const buildFilterQueryString = (query, userId) => {
       ? opdbIdFilter.length === 1
         ? `by_opdb_id=${encodeURIComponent(opdbIdFilter[0])}&`
         : opdbIdFilter
-            .map((id) => `by_opdb_id[]=${encodeURIComponent(id)}`)
+            .map((id) => `by_opdb_id%5B%5D=${encodeURIComponent(id)}`)
             .join("&") + "&"
       : "";
-  return `${machineQueryString}${icQueryString}${manufacturerQueryString}${machineTypeQueryString}${machineYearQueryString}${locationTypeQueryString}${numMachinesQueryString}${locationIcQueryString}${byOperator}${byUserFaved}${byOpdbId}`;
+  return `${machineQueryString}${icQueryString}${manufacturerQueryString}${machineTypeQueryString}${machineYearQueryString}${locationTypeQueryString}${numMachinesQueryString}${locationIcQueryString}${allAgesQueryString}${paymentTypeQueryString}${byOperator}${byUserFaved}${byOpdbId}`;
 };
 
 export const getMapMarkers =

@@ -6,6 +6,7 @@ import ConfirmationModal from "./ConfirmationModal";
 import WarningButton from "./WarningButton";
 import PbmButton from "./PbmButton";
 import DropDownButton from "./DropDownButton";
+import OptionPickerButton from "./OptionPickerButton";
 import Text from "./PbmText";
 import HyperlinkText from "./HyperlinkText";
 import FilterRecentActivity from "./FilterRecentActivity";
@@ -41,6 +42,7 @@ export {
   WarningButton,
   PbmButton,
   DropDownButton,
+  OptionPickerButton,
   Text,
   HyperlinkText,
   FilterRecentActivity,

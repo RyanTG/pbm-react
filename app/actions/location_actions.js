@@ -252,7 +252,8 @@ export const addMachineToLocationFailure = () => (dispatch) => {
 };
 
 export const updateLocationDetails =
-  (goBack, phone, website, description) => (dispatch, getState) => {
+  (goBack, phone, website, description, allAges, paymentType) =>
+  (dispatch, getState) => {
     dispatch({ type: UPDATING_LOCATION_DETAILS });
 
     const { email, authentication_token, username } = getState().user;
@@ -275,6 +276,8 @@ export const updateLocationDetails =
       description,
       location_type,
       operator_id,
+      all_ages: allAges ?? "",
+      payment_type: paymentType ?? "",
     };
 
     return putData(`/locations/${id}.json`, body)
@@ -326,6 +329,8 @@ export const suggestLocation = (locationDetails) => (dispatch, getState) => {
     website: location_website,
     description: location_comments,
     placeId: place_id,
+    allAges,
+    paymentType,
   } = locationDetails;
 
   const location_type = locationType > -1 ? locationType : null;
@@ -350,6 +355,8 @@ export const suggestLocation = (locationDetails) => (dispatch, getState) => {
     location_operator,
     location_machines,
     place_id,
+    location_all_ages: allAges ?? null,
+    location_payment_type: paymentType ?? null,
   };
 
   if (locationTrackingServicesEnabled) {

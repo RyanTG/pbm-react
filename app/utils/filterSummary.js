@@ -95,6 +95,16 @@ const locationIcFragment = (query) => {
   return "at least one Stern Insider Connected machine";
 };
 
+const allAgesFragment = (query) => {
+  if (!query.allAgesFilter) return null;
+  return "all ages allowed";
+};
+
+const paymentTypeFragment = (query) => {
+  if (!query.paymentTypeFilter) return null;
+  return "free play";
+};
+
 const operatorFragment = (query, operators) => {
   if (query.selectedOperator === "" || query.selectedOperator == null) {
     return null;
@@ -122,6 +132,8 @@ export const buildFilterSummary = ({
     yearRangeFragment(query),
     atLeastNMachinesFragment(query),
     locationIcFragment(query),
+    allAgesFragment(query),
+    paymentTypeFragment(query),
     operatorFragment(query, operators),
     favoritesFragment(query),
   ].filter(Boolean);

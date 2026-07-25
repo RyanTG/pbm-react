@@ -8,6 +8,7 @@ import FavoriteLocation from "./FavoriteLocation";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { getDistanceWithUnit } from "../utils/utilityFunctions";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
+import FontAwesome6 from "@react-native-vector-icons/fontawesome6/static";
 import { CustomIcon } from "../components";
 
 const NUM_MACHINES_TO_SHOW = 5;
@@ -29,6 +30,7 @@ const LocationBottomSheet = React.memo(
       location_type_id,
       lat,
       lon,
+      payment_type,
     } = location;
     const cityState = state ? `${city}, ${state}` : city;
 
@@ -112,14 +114,15 @@ const LocationBottomSheet = React.memo(
                   </Text>
                 </View>
               </View>
-              {locationType || user.locationTrackingServicesEnabled ? (
+              {locationType ||
+              user.locationTrackingServicesEnabled ||
+              payment_type ? (
                 <View style={s.locationTypeContainer}>
                   {user.locationTrackingServicesEnabled ? (
                     <View style={s.vertAlign}>
                       <MaterialCommunityIcons name="compass" style={s.icon} />
                       <Text
                         style={{
-                          marginRight: 15,
                           color: theme.text2,
                           fontFamily: "Nunito-Bold",
                         }}
@@ -154,6 +157,24 @@ const LocationBottomSheet = React.memo(
                       >
                         {" "}
                         {locationType.name}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {payment_type ? (
+                    <View style={s.vertAlign}>
+                      <FontAwesome6
+                        name="coins"
+                        iconStyle="solid"
+                        style={s.icon}
+                      />
+                      <Text
+                        style={{
+                          color: theme.text2,
+                          fontFamily: "Nunito-Bold",
+                        }}
+                      >
+                        {" "}
+                        {payment_type}
                       </Text>
                     </View>
                   ) : null}
@@ -223,7 +244,9 @@ const getStyles = (theme) =>
       alignItems: "center",
       justifyContent: "space-around",
       flexDirection: "row",
-      paddingVertical: 6,
+      flexWrap: "wrap",
+      rowGap: 8,
+      padding: 6,
       backgroundColor: theme.base3,
     },
     metaIcon: {
