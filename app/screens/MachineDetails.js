@@ -54,6 +54,7 @@ import {
   useNavigation,
   useTheme,
 } from "@react-navigation/native";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -89,6 +90,7 @@ const MachineDetails = ({
   const [copiedNotice, setCopiedNotice] = useState(false);
   const copiedTimeoutRef = useRef(null);
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
 
   const { curLmx, location, isFetchingLmx, lmxMutated } = locationProp;
   const lmxMutatedRef = useRef(lmxMutated);
@@ -112,10 +114,14 @@ const MachineDetails = ({
   const opdbImgHeight =
     opdb_resized > 0 ? opdb_img_height_calc : opdb_img_height;
   const opdbImgWidth = opdb_resized > 0 ? deviceWidth - 48 : opdb_img_width;
-  const machineNameMargin =
-    Platform.OS === "android"
-      ? insets.top - (PixelRatio.getFontScale() - 1) * 10 + 6
-      : insets.top - (PixelRatio.getFontScale() - 1) * 10 + 1;
+  // Clears the floating transparent header itself.
+  const machineNameMargin = headerHeight;
+  // The two plain <Modal>s below have no header of their own, so they only
+  // need to clear the safe area/status bar, not the full header height.
+  const modalTopPadding =
+    insets.top -
+    (PixelRatio.getFontScale() - 1) * 10 +
+    (Platform.OS === "android" ? 6 : 1);
   const matchplayImage = {
     dark: require("../assets/images/Resource_Matchplay_Dark.png"),
     light: require("../assets/images/Resource_Matchplay_Light.png"),
@@ -150,6 +156,16 @@ const MachineDetails = ({
       headerRight: ({ navigation }) => (
         <RemoveMachine navigation={navigation} />
       ),
+      // iOS only; takes priority over headerRight there. Renders the custom
+      // view without iOS 26's automatic circular header-item background,
+      // which otherwise clips/off-centers a plain icon (react-native-screens#2990).
+      unstable_headerRightItems: () => [
+        {
+          type: "custom",
+          element: <RemoveMachine />,
+          hidesSharedBackground: true,
+        },
+      ],
     });
   }, []);
 
@@ -312,7 +328,7 @@ const MachineDetails = ({
               contentContainerStyle={{
                 backgroundColor: theme.base1,
                 paddingBottom: 30,
-                paddingTop: machineNameMargin + 50,
+                paddingTop: modalTopPadding + 50,
               }}
             >
               <Text style={s.modalTitle}>
@@ -409,7 +425,7 @@ const MachineDetails = ({
               contentContainerStyle={{
                 backgroundColor: theme.base1,
                 paddingBottom: 30,
-                paddingTop: machineNameMargin + 50,
+                paddingTop: modalTopPadding + 50,
               }}
             >
               <Text style={s.modalTitle}>

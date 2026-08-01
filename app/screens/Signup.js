@@ -270,11 +270,6 @@ const Signup = ({ loginLater, navigation }) => {
   );
 };
 
-Signup.navigationOptions = {
-  headerShown: false,
-  gestureEnabled: true,
-};
-
 const getStyles = (theme) =>
   StyleSheet.create({
     backgroundImage: {

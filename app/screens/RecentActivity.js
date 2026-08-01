@@ -83,12 +83,23 @@ const RecentActivity = ({
   const { id: userId, loggedIn } = user;
 
   useEffect(() => {
+    const renderFilterBar = () => (
+      <FilterRecentActivity
+        onNavigateToFindMachine={() => setShouldRefresh(false)}
+      />
+    );
     navigation.setOptions({
-      headerRight: () => (
-        <FilterRecentActivity
-          onNavigateToFindMachine={() => setShouldRefresh(false)}
-        />
-      ),
+      headerRight: renderFilterBar,
+      // iOS only; takes priority over headerRight there. Renders the custom
+      // view without iOS 26's automatic circular header-item background,
+      // which otherwise clips/off-centers a plain icon (react-native-screens#2990).
+      unstable_headerRightItems: () => [
+        {
+          type: "custom",
+          element: renderFilterBar(),
+          hidesSharedBackground: true,
+        },
+      ],
     });
   }, []);
 

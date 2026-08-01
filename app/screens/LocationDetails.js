@@ -782,7 +782,7 @@ const LocationDetails = (props) => {
         <Pressable
           style={({ pressed }) => [
             [
-              { top: topMargin },
+              { bottom: 10 },
               s.directionsButton,
               s.mapViewButton,
               s.boxShadow,
@@ -812,7 +812,7 @@ const LocationDetails = (props) => {
         <Pressable
           style={({ pressed }) => [
             [
-              { top: topMargin },
+              { bottom: 10 },
               s.mapButton,
               s.mapViewButton,
               s.boxShadow,
@@ -838,7 +838,7 @@ const LocationDetails = (props) => {
         <Pressable
           style={({ pressed }) => [
             [
-              { top: topMargin },
+              { bottom: 10 },
               s.shareButton,
               s.mapViewButton,
               s.boxShadow,

@@ -51,21 +51,35 @@ const FindManufacturer = ({
   }, [navigation]);
 
   useEffect(() => {
+    const renderCheckIcon = () => (
+      <Pressable onPress={() => navigation.goBack()}>
+        {({ pressed }) => (
+          <View style={{ marginRight: 10 }}>
+            <MaterialIcons
+              name="check-box"
+              size={32}
+              color={pressed ? "#95867c" : "#68b0f3"}
+            />
+          </View>
+        )}
+      </Pressable>
+    );
     navigation.setOptions({
       headerRight: () =>
-        selectedManufacturers.length > 0 ? (
-          <Pressable onPress={() => navigation.goBack()}>
-            {({ pressed }) => (
-              <View style={{ marginRight: 10 }}>
-                <MaterialIcons
-                  name="check-box"
-                  size={32}
-                  color={pressed ? "#95867c" : "#68b0f3"}
-                />
-              </View>
-            )}
-          </Pressable>
-        ) : null,
+        selectedManufacturers.length > 0 ? renderCheckIcon() : null,
+      // iOS only; takes priority over headerRight there. Renders the custom
+      // view without iOS 26's automatic circular header-item background,
+      // which otherwise clips/off-centers a plain icon (react-native-screens#2990).
+      unstable_headerRightItems: () =>
+        selectedManufacturers.length > 0
+          ? [
+              {
+                type: "custom",
+                element: renderCheckIcon(),
+                hidesSharedBackground: true,
+              },
+            ]
+          : [],
     });
   }, [selectedManufacturers]);
 

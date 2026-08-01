@@ -291,38 +291,43 @@ const FindMachine = ({
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    navigation.setOptions({
-      title: route.params?.machineFilter
-        ? "Select Machines for Filter"
-        : `Select Machine${route.params?.multiSelect ? "s" : ""}`,
-    });
-  }, []);
-
-  useEffect(() => {
     const lifeListUserId = route.params?.lifeListUserId;
+    const renderCheckIcon = () => (
+      <Pressable
+        onPress={() => {
+          if (lifeListUserId) {
+            setShowLifeListConfirmModal(true);
+          } else {
+            navigation.goBack(null);
+          }
+        }}
+      >
+        {({ pressed }) => (
+          <View style={{ marginRight: 10 }}>
+            <MaterialIcons
+              name="check-box"
+              size={32}
+              color={pressed ? "#95867c" : "#68b0f3"}
+            />
+          </View>
+        )}
+      </Pressable>
+    );
     navigation.setOptions({
-      headerRight: () =>
-        route.params?.showDone ? (
-          <Pressable
-            onPress={() => {
-              if (lifeListUserId) {
-                setShowLifeListConfirmModal(true);
-              } else {
-                navigation.goBack(null);
-              }
-            }}
-          >
-            {({ pressed }) => (
-              <View style={{ marginRight: 10 }}>
-                <MaterialIcons
-                  name="check-box"
-                  size={32}
-                  color={pressed ? "#95867c" : "#68b0f3"}
-                />
-              </View>
-            )}
-          </Pressable>
-        ) : null,
+      headerRight: () => (route.params?.showDone ? renderCheckIcon() : null),
+      // iOS only; takes priority over headerRight there. Renders the custom
+      // view without iOS 26's automatic circular header-item background,
+      // which otherwise clips/off-centers a plain icon (react-native-screens#2990).
+      unstable_headerRightItems: () =>
+        route.params?.showDone
+          ? [
+              {
+                type: "custom",
+                element: renderCheckIcon(),
+                hidesSharedBackground: true,
+              },
+            ]
+          : [],
     });
   }, [route.params?.showDone]);
 
