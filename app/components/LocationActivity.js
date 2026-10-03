@@ -340,7 +340,11 @@ const LocationActivity = ({
               />
             </View>
           </View>
-          <ScrollView ref={scrollViewRef} style={{ height: "80%" }}>
+          <ScrollView
+            ref={scrollViewRef}
+            style={{ height: "80%" }}
+            contentContainerStyle={{ paddingVertical: 10 }}
+          >
             {selectedLocationActivities.length ? (
               <View style={s.filterView}>
                 <Text style={[s.filter, s.bold]}>Clear filters</Text>
@@ -589,6 +593,7 @@ const getStyles = (theme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
+      marginTop: -10,
     },
     filter: {
       fontSize: 14,

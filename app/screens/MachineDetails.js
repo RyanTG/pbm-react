@@ -852,14 +852,14 @@ const MachineDetails = ({
               )}
             </View>
             {!!location.operator_id && operatorHasEmail && (
-              <View style={[s.operatorEmail, s.operatorHasEmail]}>
+              <View style={[s.operatorEmail]}>
                 <Text style={[s.operatorComments, s.bold]}>
                   This operator receives machine comments!
                 </Text>
               </View>
             )}
             {!!location.operator_id && !operatorHasEmail && (
-              <View style={[s.operatorEmail, s.operatorNotEmail]}>
+              <View style={[s.operatorEmail]}>
                 <Text style={[s.operatorComments, s.bold]}>
                   This operator does NOT receive machine comments
                 </Text>
@@ -1152,12 +1152,7 @@ const getStyles = (theme) =>
       borderBottomLeftRadius: 15,
       borderBottomRightRadius: 15,
       paddingVertical: 10,
-    },
-    operatorHasEmail: {
-      backgroundColor: theme.base4,
-    },
-    operatorNotEmail: {
-      backgroundColor: theme.base3,
+      backgroundColor: theme.theme == "dark" ? theme.base3 : theme.base4,
     },
     operatorComments: {
       textAlign: "center",

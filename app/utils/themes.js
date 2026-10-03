@@ -8,7 +8,7 @@ export const dark = {
   buttonMask: "rgba(0,0,0,.2)",
   indigo4: "#A5A2B1",
   mask: "rgba(0,0,0,.8)",
-  red2: "#e4606a",
+  red2: "#f56e78",
   red3: "#3f2d2f",
   text: "#f9f2fa",
   text2: "#E0D6E0",

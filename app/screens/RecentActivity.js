@@ -471,7 +471,7 @@ const RecentActivity = ({
     <View style={{ flex: 1, backgroundColor: theme.base1 }}>
       <ScrollView
         ref={scrollViewRef}
-        contentContainerStyle={{ paddingTop: 10 }}
+        contentContainerStyle={{ paddingVertical: 10 }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
