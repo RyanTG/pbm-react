@@ -35,7 +35,7 @@ import {
   KEY_LAST_MACHINE_SORT_ORDER,
 } from "../utils/constants";
 
-export const fetchCurrentLocation = (isInitialLoad) => (dispatch) => {
+export const fetchCurrentLocation = (isInitialLoad) => (dispatch, getState) => {
   dispatch({ type: FETCHING_LOCATION_TRACKING_ENABLED });
 
   return Location.hasServicesEnabledAsync()
@@ -66,6 +66,10 @@ export const fetchCurrentLocation = (isInitialLoad) => (dispatch) => {
       },
     )
     .then(({ lat, lon }) => {
+      // The initial centering only applies if nothing has positioned the map
+      // yet. On a cold start restored to LocationDetails, backing out to the
+      // map can set it to that location before the GPS fix arrives.
+      if (isInitialLoad && getState().query.swLat !== null) return;
       if (lat && lon) {
         const bounds = coordsToBounds({ lat, lon });
         dispatch(triggerUpdateBounds(bounds, true));
