@@ -570,6 +570,11 @@ const LocationDetails = (props) => {
   const photoGesture = Gesture.Simultaneous(pinchGesture, panGesture);
 
   const pinchAnimatedStyle = useAnimatedStyle(() => ({
+    // Size the wrapper to the image's fitted (contain) box so borderRadius
+    // rounds the visible image rather than the letterboxed container.
+    ...(fittedWidth.value && fittedHeight.value
+      ? { width: fittedWidth.value, height: fittedHeight.value }
+      : { width: "100%", height: "100%" }),
     transform: [
       { translateX: translateX.value },
       { translateY: translateY.value },
@@ -584,6 +589,11 @@ const LocationDetails = (props) => {
     translateY.value = withTiming(0, { duration: 200 });
     savedTranslateX.value = 0;
     savedTranslateY.value = 0;
+    // Clear the previous photo's fitted size so the next one doesn't briefly
+    // render inside the old aspect ratio before its onLoad fires.
+    naturalImageSize.current = { width: 0, height: 0 };
+    fittedWidth.value = 0;
+    fittedHeight.value = 0;
   };
 
   useEffect(() => {
@@ -1716,7 +1726,7 @@ const LocationDetails = (props) => {
                 {fullResLoading ? (
                   <ActivityIndicator />
                 ) : fullResUrl ? (
-                  <Animated.View style={[{ flex: 1 }, pinchAnimatedStyle]}>
+                  <Animated.View style={pinchAnimatedStyle}>
                     <Image
                       source={{ uri: fullResUrl }}
                       style={s.photoModalImage}
@@ -2403,12 +2413,14 @@ const getStyles = (theme) =>
     photoModalImageContainer: {
       flex: 1,
       justifyContent: "center",
+      alignItems: "center",
       marginTop: 90,
       marginBottom: 10,
     },
     photoModalImage: {
       width: "100%",
       height: "100%",
+      borderRadius: 15,
     },
     photoModalNav: {
       flexDirection: "row",
