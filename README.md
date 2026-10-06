@@ -14,6 +14,15 @@ If you want to contribute to the development of the Pinball Map React Native app
 
 Release dates are approximate, given that review times vary between the App Store and Play Store.
 
+### 5.4.26
+
+October 6, 2026
+
+- If the app is closed, and re-opening requires a "cold start", the cold start will remember if you were last viewing a location or a machine (within a 3 hour time frame) and will open back up to that rather the map screen.
+- Subtle, but cute, animation to the "refresh this area" button so that new users are less likely to miss it.
+- Small back end changes.
+- Various minor design tweaks.
+
 ### 5.4.25
 
 September 28, 2026
