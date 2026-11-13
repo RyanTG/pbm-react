@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { connect, useDispatch } from "react-redux";
 import {
+  ActivityIndicator as RNActivityIndicator,
   Alert,
   Linking,
   Modal,
@@ -123,6 +124,8 @@ const SQUARE_BUTTON_STRIP_PADDING = 20;
 const BASE_ICON_SIZE = 18;
 const MAX_FONT_SCALE = 1.6;
 const SCALE_OFFSET = 2;
+const PHOTO_SWIPE_DISTANCE = 80;
+const PHOTO_SWIPE_VELOCITY = 800;
 
 const MachineListItem = ({
   machine,
@@ -255,7 +258,15 @@ const LocationDetails = (props) => {
   const containerHeight = useSharedValue(0);
   const fittedWidth = useSharedValue(0);
   const fittedHeight = useSharedValue(0);
+  const swipeX = useSharedValue(0);
+  const photoIndexSV = useSharedValue(0);
+  const photoCountSV = useSharedValue(0);
+  const panMaxPointers = useSharedValue(0);
   const naturalImageSize = useRef({ width: 0, height: 0 });
+  const photoIndexRef = useRef(0);
+  const picturesRef = useRef(null);
+  const fullResRequestRef = useRef(0);
+  const photoSwapPendingRef = useRef(false);
   const randomMachineNameScale = useSharedValue(0);
   const diceRotation = useSharedValue(0);
   const { route } = props;
@@ -273,11 +284,13 @@ const LocationDetails = (props) => {
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [fullResUrl, setFullResUrl] = useState(null);
-  const [fullResLoading, setFullResLoading] = useState(false);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [thumbShown, setThumbShown] = useState(false);
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [deletingPicture, setDeletingPicture] = useState(false);
   const [photoTipsModalVisible, setPhotoTipsModalVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  picturesRef.current = pictures;
   const [randomMachineModalVisible, setRandomMachineModalVisible] =
     useState(false);
   const [randomMachineName, setRandomMachineName] = useState(null);
@@ -512,11 +525,21 @@ const LocationDetails = (props) => {
     updateFittedSize();
   };
 
-  const handleFullResImageLoad = (e) => {
+  const finishPhotoSwap = () => {
+    setThumbShown(true);
+    if (!photoSwapPendingRef.current) return;
+    photoSwapPendingRef.current = false;
+    swipeX.value = 0;
+  };
+
+  const handlePhotoThumbLoad = (e) => {
     const { width, height } = e.source;
     naturalImageSize.current = { width, height };
     updateFittedSize();
+    finishPhotoSwap();
   };
+
+  const handleFullResDone = () => setPhotoLoading(false);
 
   const clampTranslation = () => {
     "worklet";
@@ -536,6 +559,34 @@ const LocationDetails = (props) => {
       Math.max(translateY.value, -maxTranslateY),
       maxTranslateY,
     );
+  };
+
+  const loadPhoto = (index, pics) => {
+    photoIndexRef.current = index;
+    photoIndexSV.value = index;
+    photoCountSV.value = pics.length;
+    setPhotoIndex(index);
+    setFullResUrl(null);
+    setPhotoLoading(true);
+    setThumbShown(false);
+    setDeleteConfirmVisible(false);
+    resetZoom();
+    photoSwapPendingRef.current = true;
+    const requestId = ++fullResRequestRef.current;
+    dispatch(fetchLocationPictureFullRes(pics[index].id))
+      .then((data) => {
+        if (requestId === fullResRequestRef.current) setFullResUrl(data.url);
+      })
+      .catch(() => {
+        if (requestId === fullResRequestRef.current) handleFullResDone();
+      });
+  };
+
+  const goToPhotoOffset = (offset) => {
+    const pics = picturesRef.current;
+    const newIndex = photoIndexRef.current + offset;
+    if (!pics || newIndex < 0 || newIndex >= pics.length) return;
+    loadPhoto(newIndex, pics);
   };
 
   const pinchGesture = usePinchGesture({
@@ -559,15 +610,53 @@ const LocationDetails = (props) => {
   });
 
   const panGesture = usePanGesture({
+    onBegin: (e) => {
+      panMaxPointers.value = e.numberOfPointers;
+    },
     onUpdate: (e) => {
+      const prevMaxPointers = panMaxPointers.value;
+      panMaxPointers.value = Math.max(prevMaxPointers, e.numberOfPointers);
       if (pinchScale.value <= 1) {
+        if (panMaxPointers.value === 1) {
+          swipeX.value = e.translationX;
+        } else if (prevMaxPointers === 1) {
+          swipeX.value = withTiming(0, { duration: 150 });
+        }
         return;
       }
       translateX.value = savedTranslateX.value + e.translationX;
       translateY.value = savedTranslateY.value + e.translationY;
       clampTranslation();
     },
-    onDeactivate: () => {
+    onDeactivate: (e) => {
+      if (pinchScale.value <= 1) {
+        const dir = Math.sign(e.translationX);
+        const isHorizontal =
+          Math.abs(e.translationX) > Math.abs(e.translationY);
+        const isFling =
+          Math.sign(e.velocityX) === dir &&
+          Math.abs(e.velocityX) > PHOTO_SWIPE_VELOCITY;
+        const targetIndex = photoIndexSV.value - dir;
+        if (
+          panMaxPointers.value === 1 &&
+          dir !== 0 &&
+          isHorizontal &&
+          (Math.abs(e.translationX) > PHOTO_SWIPE_DISTANCE || isFling) &&
+          targetIndex >= 0 &&
+          targetIndex < photoCountSV.value
+        ) {
+          swipeX.value = withTiming(
+            dir * containerWidth.value,
+            { duration: 180, easing: Easing.out(Easing.quad) },
+            (finished) => {
+              if (finished) runOnJS(goToPhotoOffset)(-dir);
+            },
+          );
+        } else {
+          swipeX.value = withTiming(0, { duration: 150 });
+        }
+        return;
+      }
       savedTranslateX.value = translateX.value;
       savedTranslateY.value = translateY.value;
     },
@@ -580,7 +669,7 @@ const LocationDetails = (props) => {
       ? { width: fittedWidth.value, height: fittedHeight.value }
       : { width: "100%", height: "100%" }),
     transform: [
-      { translateX: translateX.value },
+      { translateX: translateX.value + swipeX.value },
       { translateY: translateY.value },
       { scale: pinchScale.value },
     ],
@@ -593,9 +682,6 @@ const LocationDetails = (props) => {
     translateY.value = withTiming(0, { duration: 200 });
     savedTranslateX.value = 0;
     savedTranslateY.value = 0;
-    naturalImageSize.current = { width: 0, height: 0 };
-    fittedWidth.value = 0;
-    fittedHeight.value = 0;
   };
 
   useEffect(() => {
@@ -607,7 +693,7 @@ const LocationDetails = (props) => {
       setPhotoModalVisible(false);
       setPhotoIndex(0);
       setFullResUrl(null);
-      setFullResLoading(false);
+      setPhotoLoading(false);
       setUploadingPicture(false);
       setDeletingPicture(false);
       setPhotoTipsModalVisible(false);
@@ -683,42 +769,12 @@ const LocationDetails = (props) => {
   };
 
   const openPhotoModal = (index, pics = pictures) => {
-    setPhotoIndex(index);
-    setFullResUrl(null);
-    setDeleteConfirmVisible(false);
+    swipeX.value = 0;
+    naturalImageSize.current = { width: 0, height: 0 };
+    fittedWidth.value = 0;
+    fittedHeight.value = 0;
     setPhotoModalVisible(true);
-    setFullResLoading(true);
-    resetZoom();
-    dispatch(fetchLocationPictureFullRes(pics[index].id))
-      .then((data) => setFullResUrl(data.url))
-      .catch(() => {})
-      .finally(() => setFullResLoading(false));
-  };
-
-  const goToPrevPhoto = () => {
-    const newIndex = photoIndex - 1;
-    setPhotoIndex(newIndex);
-    setFullResUrl(null);
-    setDeleteConfirmVisible(false);
-    resetZoom();
-    setFullResLoading(true);
-    dispatch(fetchLocationPictureFullRes(pictures[newIndex].id))
-      .then((data) => setFullResUrl(data.url))
-      .catch(() => {})
-      .finally(() => setFullResLoading(false));
-  };
-
-  const goToNextPhoto = () => {
-    const newIndex = photoIndex + 1;
-    setPhotoIndex(newIndex);
-    setFullResUrl(null);
-    setDeleteConfirmVisible(false);
-    resetZoom();
-    setFullResLoading(true);
-    dispatch(fetchLocationPictureFullRes(pictures[newIndex].id))
-      .then((data) => setFullResUrl(data.url))
-      .catch(() => {})
-      .finally(() => setFullResLoading(false));
+    loadPhoto(index, pics);
   };
 
   const openPhotoPicker = async () => {
@@ -768,7 +824,7 @@ const LocationDetails = (props) => {
           setPhotoModalVisible(false);
         } else {
           const newIndex = Math.min(photoIndex, newPictures.length - 1);
-          openPhotoModal(newIndex, newPictures);
+          loadPhoto(newIndex, newPictures);
         }
       })
       .catch(() => Alert.alert("Delete failed. Please try again."))
@@ -1730,24 +1786,40 @@ const LocationDetails = (props) => {
                 style={s.photoModalImageContainer}
                 onLayout={handlePhotoContainerLayout}
               >
-                {fullResLoading ? (
-                  <ActivityIndicator />
-                ) : fullResUrl ? (
+                {pictures?.[photoIndex] ? (
                   <Animated.View style={pinchAnimatedStyle}>
                     <Image
-                      source={{ uri: fullResUrl }}
+                      source={{ uri: pictures[photoIndex].url }}
+                      recyclingKey={String(pictures[photoIndex].id)}
+                      blurRadius={10}
                       style={s.photoModalImage}
                       contentFit="contain"
-                      onLoad={handleFullResImageLoad}
+                      onLoad={handlePhotoThumbLoad}
+                      onError={finishPhotoSwap}
                     />
+                    {fullResUrl ? (
+                      <Image
+                        source={{ uri: fullResUrl }}
+                        style={s.photoModalImage}
+                        contentFit="contain"
+                        transition={200}
+                        onLoad={handleFullResDone}
+                        onError={handleFullResDone}
+                      />
+                    ) : null}
                   </Animated.View>
                 ) : null}
+                {photoLoading && thumbShown && (
+                  <View style={s.photoModalSpinner} pointerEvents="none">
+                    <RNActivityIndicator color="#fe46b0" />
+                  </View>
+                )}
               </View>
             </GestureDetector>
 
             <View style={s.photoModalNav}>
               <Pressable
-                onPress={goToPrevPhoto}
+                onPress={() => goToPhotoOffset(-1)}
                 disabled={photoIndex === 0}
                 style={[
                   s.photoNavButton,
@@ -1764,7 +1836,7 @@ const LocationDetails = (props) => {
                 {photoIndex + 1} / {pictures?.length}
               </Text>
               <Pressable
-                onPress={goToNextPhoto}
+                onPress={() => goToPhotoOffset(1)}
                 disabled={photoIndex === pictures?.length - 1}
                 style={[
                   s.photoNavButton,
@@ -2423,9 +2495,13 @@ const getStyles = (theme, deviceWidth) =>
       marginTop: 90,
       marginBottom: 10,
     },
+    photoModalSpinner: {
+      ...StyleSheet.absoluteFill,
+      justifyContent: "center",
+      alignItems: "center",
+    },
     photoModalImage: {
-      width: "100%",
-      height: "100%",
+      ...StyleSheet.absoluteFill,
       borderRadius: 15,
     },
     photoModalNav: {
